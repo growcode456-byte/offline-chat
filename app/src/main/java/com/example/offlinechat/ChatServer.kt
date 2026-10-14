@@ -27,9 +27,10 @@ class ChatServer(
                 onStatus("Client tersambung!")
                 writer = PrintWriter(clientSocket!!.getOutputStream(), true)
                 val reader = BufferedReader(InputStreamReader(clientSocket!!.getInputStream()))
-                var line: String?
-                while (running && reader.readLine().also { line = it } != null) {
-                    ChatMessage.fromJson(line!!)?.let { onMessage(it) }
+                while (running) {
+                    val line: String = reader.readLine() ?: break
+                    val msg = ChatMessage.fromJson(line)
+                    if (msg != null) onMessage(msg)
                 }
             } catch (e: Exception) {
                 if (running) onStatus("Server error: ${e.message}")

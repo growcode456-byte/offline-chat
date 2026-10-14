@@ -21,13 +21,15 @@ class ChatClient(
         Thread {
             try {
                 onStatus("Connect ke $serverIp:$port...")
-                socket = Socket().apply { connect(InetSocketAddress(serverIp, port), 5000) }
+                socket = Socket()
+                socket?.connect(InetSocketAddress(serverIp, port), 5000)
                 onStatus("Tersambung ke server!")
                 writer = PrintWriter(socket!!.getOutputStream(), true)
                 val reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
-                var line: String?
-                while (running && reader.readLine().also { line = it } != null) {
-                    ChatMessage.fromJson(line!!)?.let { onMessage(it) }
+                while (running) {
+                    val line: String = reader.readLine() ?: break
+                    val msg = ChatMessage.fromJson(line)
+                    if (msg != null) onMessage(msg)
                 }
             } catch (e: Exception) {
                 if (running) onStatus("Client error: ${e.message}")
