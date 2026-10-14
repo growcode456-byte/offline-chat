@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnScan: Button
     private lateinit var btnOpenChat: Button
     private lateinit var btnDisconnect: Button
+    private lateinit var btnTestChat: Button
 
     private var isConnected = false
     private var isGroupOwner = false
@@ -35,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         btnScan = findViewById(R.id.btnScan)
         btnOpenChat = findViewById(R.id.btnOpenChat)
         btnDisconnect = findViewById(R.id.btnDisconnect)
+        btnTestChat = findViewById(R.id.btnTestChat)
         val list = findViewById<RecyclerView>(R.id.peerList)
 
         adapter = PeerAdapter { device ->
@@ -53,7 +55,6 @@ class MainActivity : AppCompatActivity() {
 
         if (!wifiManager.init()) {
             statusText.text = "WiFi Direct gak didukung"
-            return
         }
 
         btnScan.setOnClickListener {
@@ -66,6 +67,14 @@ class MainActivity : AppCompatActivity() {
                 putExtra("isGroupOwner", isGroupOwner)
                 putExtra("myName", myDeviceName)
                 putExtra("peerName", connectedPeerName ?: "Peer")
+            }
+            startActivity(intent)
+        }
+
+        btnTestChat.setOnClickListener {
+            val intent = Intent(this, ChatActivity::class.java).apply {
+                putExtra("loopback", true)
+                putExtra("myName", myDeviceName)
             }
             startActivity(intent)
         }

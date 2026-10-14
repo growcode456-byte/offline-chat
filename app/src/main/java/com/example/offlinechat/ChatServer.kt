@@ -9,7 +9,8 @@ import java.net.Socket
 class ChatServer(
     private val port: Int,
     private val onMessage: (ChatMessage) -> Unit,
-    private val onStatus: (String) -> Unit
+    private val onStatus: (String) -> Unit,
+    private val echoMode: Boolean = false
 ) {
     private var serverSocket: ServerSocket? = null
     private var clientSocket: Socket? = null
@@ -30,7 +31,18 @@ class ChatServer(
                 while (running) {
                     val line: String = reader.readLine() ?: break
                     val msg = ChatMessage.fromJson(line)
-                    if (msg != null) onMessage(msg)
+                    if (msg != null) {
+                        onMessage(msg)
+                        if (echoMode) {
+                            Thread.sleep(400)
+                            val echo = ChatMessage(
+                                from = "Bot",
+                                text = "Echo: ${msg.text}",
+                                timestamp = System.currentTimeMillis()
+                            )
+                            send(echo)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 if (running) onStatus("Server error: ${e.message}")

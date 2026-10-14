@@ -43,6 +43,13 @@
         android:text="Putuskan Koneksi"
         android:visibility="gone" />
 
+    <Button
+        android:id="@+id/btnTestChat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Test Chat (1 HP)" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
