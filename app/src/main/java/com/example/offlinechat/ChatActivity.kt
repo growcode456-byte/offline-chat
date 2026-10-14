@@ -1,6 +1,8 @@
 package com.example.offlinechat
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -17,6 +19,7 @@ class ChatActivity : AppCompatActivity() {
     private var myName = "Saya"
     private lateinit var statusText: TextView
     private lateinit var list: RecyclerView
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,8 +44,7 @@ class ChatActivity : AppCompatActivity() {
         list.adapter = adapter
 
         if (isLoopback) {
-            statusText.text = "Mode test: server + client di HP ini"
-            startLoopback()
+            statusText.text = "Mode test lokal (simulasi echo)"
         } else {
             statusText.text = if (isGroupOwner) "Kamu: SERVER" else "Kamu: CLIENT"
             if (isGroupOwner) startServer() else startClient()
@@ -54,34 +56,39 @@ class ChatActivity : AppCompatActivity() {
             val msg = ChatMessage(myName, text, System.currentTimeMillis(), isMine = true)
             adapter.addMessage(msg)
             list.scrollToPosition(adapter.itemCount - 1)
+            input.setText("")
+
             if (isLoopback) {
-                client?.send(msg)
+                // Echo lokal, tanpa socket
+                handler.postDelayed({
+                    val echo = ChatMessage(
+                        from = "Echo Bot",
+                        text = "Echo: $text",
+                        timestamp = System.currentTimeMillis(),
+                        isMine = false
+                    )
+                    adapter.addMessage(echo)
+                    list.scrollToPosition(adapter.itemCount - 1)
+                }, 600)
             } else if (isGroupOwner) {
                 server?.send(msg)
             } else {
                 client?.send(msg)
             }
-            input.setText("")
         }
-    }
 
-    private fun startLoopback() {
-        // Server echo dulu
-        server = ChatServer(8888,
-            onMessage = { /* server terima pesan dari client, di-echo otomatis */ },
-            onStatus = { },
-            echoMode = true
-        )
-        server?.start()
-
-        // Delay 800ms biar server siap
-        list.postDelayed({
-            client = ChatClient("127.0.0.1", 8888,
-                onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
-                onStatus = { s -> runOnUiThread { statusText.text = s } }
-            )
-            client?.connect()
-        }, 800)
+        // Kalau bukan loopback, kirim pesan pembuka info
+        if (isLoopback) {
+            handler.postDelayed({
+                val welcome = ChatMessage(
+                    from = "Echo Bot",
+                    text = "Halo! Ketik pesan apa aja, nanti aku balas.",
+                    timestamp = System.currentTimeMillis(),
+                    isMine = false
+                )
+                adapter.addMessage(welcome)
+            }, 300)
+        }
     }
 
     private fun startServer() {
@@ -107,6 +114,7 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
         server?.stop()
         client?.stop()
     }
