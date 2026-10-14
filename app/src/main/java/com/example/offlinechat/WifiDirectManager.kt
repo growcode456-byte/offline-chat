@@ -11,7 +11,15 @@ import android.net.wifi.p2p.WifiP2pConfig
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
-import android.net.wifi.p2p.WifiP2pManager.*
+import android.net.wifi.p2p.WifiP2pManager.ActionListener
+import android.net.wifi.p2p.WifiP2pManager.Channel
+import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION
+import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION
+import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION
+import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED
+import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION
+import android.net.wifi.p2p.WifiP2pManager.EXTRA_WIFI_STATE
+import android.net.wifi.p2p.WifiP2pManager.EXTRA_WIFI_P2P_DEVICE
 import android.os.Build
 import android.os.Looper
 import androidx.core.content.ContextCompat
@@ -46,6 +54,7 @@ class WifiDirectManager(private val context: Context) {
                     }
                 }
                 WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
+                    @Suppress("DEPRECATION")
                     val device = intent.getParcelableExtra<WifiP2pDevice>(EXTRA_WIFI_P2P_DEVICE)
                     if (device != null) onThisDeviceChanged?.invoke(device)
                 }
@@ -71,7 +80,9 @@ class WifiDirectManager(private val context: Context) {
             addAction(WIFI_P2P_CONNECTION_CHANGED_ACTION)
             addAction(WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
         }
-        context.registerReceiver(receiver, filter)
+        ContextCompat.registerReceiver(
+            context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     fun unregisterReceiver() {
@@ -108,19 +119,13 @@ class WifiDirectManager(private val context: Context) {
 
         val config = WifiP2pConfig().apply {
             deviceAddress = device.deviceAddress
-            wps.setup = WpsInfo.PBC
+            wps.setup = android.net.wifi.p2p.WpsInfo.PBC
         }
         onStatusChanged?.invoke("Menghubungkan ke ${device.deviceName}...")
         manager.connect(channel, config, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Koneksi diproses...") }
             override fun onFailure(reason: Int) {
-                val msg = when (reason) {
-                    ERROR -> "Error umum"
-                    P2P_UNSUPPORTED -> "Gak didukung"
-                    BUSY -> "Sibuk, coba lagi"
-                    else -> "Gagal: $reason"
-                }
-                onStatusChanged?.invoke("Gagal connect: $msg")
+                onStatusChanged?.invoke("Gagal connect: kode $reason")
             }
         })
     }
