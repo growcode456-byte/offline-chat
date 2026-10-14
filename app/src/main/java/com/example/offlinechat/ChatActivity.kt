@@ -1,22 +1,28 @@
 package com.example.offlinechat
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class ChatActivity : AppCompatActivity() {
+
     private lateinit var adapter: MessageAdapter
-    private var server: ChatServer? = null
-    private var client: ChatClient? = null
-    private var isGroupOwner = false
-    private var isLoopback = false
+    private var tcpServer: ChatServer? = null
+    private var tcpClient: ChatClient? = null
+    private var btServer: BluetoothChatServer? = null
+    private var btClient: BluetoothChatClient? = null
+
+    private var mode = "tcp"
+    private var isServer = false
     private var myName = "Saya"
+
     private lateinit var statusText: TextView
     private lateinit var list: RecyclerView
     private val handler = Handler(Looper.getMainLooper())
@@ -25,17 +31,26 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-        isLoopback = intent.getBooleanExtra("loopback", false)
-        isGroupOwner = intent.getBooleanExtra("isGroupOwner", false)
-        myName = intent.getStringExtra("myName") ?: "Saya"
-        val peerName = intent.getStringExtra("peerName") ?: "Peer"
+        val isLoopback = intent.getBooleanExtra("loopback", false)
+        val btMode = intent.getBooleanExtra("btMode", false)
+        val btIsServer = intent.getBooleanExtra("btIsServer", false)
+        val btAddress = intent.getStringExtra("btAddress")
+        val btName = intent.getStringExtra("btName") ?: "Peer"
+        val wfdIsServer = intent.getBooleanExtra("isGroupOwner", false)
+        val wfdPeer = intent.getStringExtra("peerName") ?: "Peer"
 
-        findViewById<TextView>(R.id.chatTitle).text =
-            if (isLoopback) "Test Chat (1 HP)" else "Chat dengan $peerName"
+        myName = intent.getStringExtra("myName") ?: "Saya"
+
         statusText = findViewById(R.id.chatStatus)
         list = findViewById(R.id.messageList)
         val input = findViewById<EditText>(R.id.messageInput)
-        val btnSend = findViewById<Button>(R.id.btnSend)
+        val btnSend = findViewById<ImageButton>(R.id.btnSend)
+
+        findViewById<TextView>(R.id.chatTitle).text = when {
+            isLoopback -> "Test Chat (1 HP)"
+            btMode -> "Chat BT: $btName"
+            else -> "Chat WFD: $wfdPeer"
+        }
 
         adapter = MessageAdapter()
         val lm = LinearLayoutManager(this)
@@ -43,11 +58,23 @@ class ChatActivity : AppCompatActivity() {
         list.layoutManager = lm
         list.adapter = adapter
 
-        if (isLoopback) {
-            statusText.text = "Mode test lokal (simulasi echo)"
-        } else {
-            statusText.text = if (isGroupOwner) "Kamu: SERVER" else "Kamu: CLIENT"
-            if (isGroupOwner) startServer() else startClient()
+        when {
+            isLoopback -> {
+                mode = "loopback"
+                statusText.text = "Mode test lokal"
+            }
+            btMode -> {
+                mode = "bt"
+                isServer = btIsServer
+                statusText.text = if (isServer) "BT Server..." else "BT Client..."
+                if (isServer) startBtServer() else startBtClient(btAddress)
+            }
+            else -> {
+                mode = "tcp"
+                isServer = wfdIsServer
+                statusText.text = if (isServer) "TCP Server" else "TCP Client"
+                if (isServer) startTcpServer() else startTcpClient()
+            }
         }
 
         btnSend.setOnClickListener {
@@ -58,53 +85,64 @@ class ChatActivity : AppCompatActivity() {
             list.scrollToPosition(adapter.itemCount - 1)
             input.setText("")
 
-            if (isLoopback) {
-                // Echo lokal, tanpa socket
-                handler.postDelayed({
-                    val echo = ChatMessage(
-                        from = "Echo Bot",
-                        text = "Echo: $text",
-                        timestamp = System.currentTimeMillis(),
-                        isMine = false
-                    )
+            when (mode) {
+                "loopback" -> handler.postDelayed({
+                    val echo = ChatMessage("Echo Bot", "Echo: $text", System.currentTimeMillis())
                     adapter.addMessage(echo)
                     list.scrollToPosition(adapter.itemCount - 1)
                 }, 600)
-            } else if (isGroupOwner) {
-                server?.send(msg)
-            } else {
-                client?.send(msg)
+                "bt" -> if (isServer) btServer?.send(msg) else btClient?.send(msg)
+                else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
             }
         }
 
-        // Kalau bukan loopback, kirim pesan pembuka info
         if (isLoopback) {
             handler.postDelayed({
                 val welcome = ChatMessage(
-                    from = "Echo Bot",
-                    text = "Halo! Ketik pesan apa aja, nanti aku balas.",
-                    timestamp = System.currentTimeMillis(),
-                    isMine = false
+                    "Echo Bot",
+                    "Halo! Ketik pesan apa aja, nanti aku balas.",
+                    System.currentTimeMillis()
                 )
                 adapter.addMessage(welcome)
             }, 300)
         }
     }
 
-    private fun startServer() {
-        server = ChatServer(8888,
+    private fun startTcpServer() {
+        tcpServer = ChatServer(8888,
             onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
             onStatus = { s -> runOnUiThread { statusText.text = s } }
         )
-        server?.start()
+        tcpServer?.start()
     }
 
-    private fun startClient() {
-        client = ChatClient("192.168.49.1", 8888,
+    private fun startTcpClient() {
+        tcpClient = ChatClient("192.168.49.1", 8888,
             onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
             onStatus = { s -> runOnUiThread { statusText.text = s } }
         )
-        client?.connect()
+        tcpClient?.connect()
+    }
+
+    private fun startBtServer() {
+        btServer = BluetoothChatServer(this,
+            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        )
+        btServer?.start()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startBtClient(address: String?) {
+        if (address == null) { statusText.text = "Alamat BT kosong"; return }
+        val adapter = (getSystemService(BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager).adapter
+        val device = try { adapter?.getRemoteDevice(address) } catch (e: Exception) { null }
+        if (device == null) { statusText.text = "Device BT gak ditemukan"; return }
+        btClient = BluetoothChatClient(device,
+            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        )
+        btClient?.connect()
     }
 
     private fun addIncoming(msg: ChatMessage) {
@@ -115,7 +153,7 @@ class ChatActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
-        server?.stop()
-        client?.stop()
+        tcpServer?.stop(); tcpClient?.stop()
+        btServer?.stop(); btClient?.stop()
     }
 }
