@@ -13,13 +13,6 @@ import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.net.wifi.p2p.WifiP2pManager.ActionListener
 import android.net.wifi.p2p.WifiP2pManager.Channel
-import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION
-import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION
-import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION
-import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED
-import android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION
-import android.net.wifi.p2p.WifiP2pManager.EXTRA_WIFI_STATE
-import android.net.wifi.p2p.WifiP2pManager.EXTRA_WIFI_P2P_DEVICE
 import android.os.Build
 import android.os.Looper
 import androidx.core.content.ContextCompat
@@ -38,24 +31,27 @@ class WifiDirectManager(private val context: Context) {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
             when (intent.action) {
-                WIFI_P2P_STATE_CHANGED_ACTION -> {
-                    val state = intent.getIntExtra(EXTRA_WIFI_STATE, -1)
+                WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION -> {
+                    val state = intent.getIntExtra(
+                        WifiP2pManager.EXTRA_WIFI_STATE, -1
+                    )
                     onStatusChanged?.invoke(
-                        if (state == WIFI_P2P_STATE_ENABLED) "WiFi Direct aktif"
+                        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
+                            "WiFi Direct aktif"
                         else "WiFi Direct MATI"
                     )
                 }
-                WIFI_P2P_PEERS_CHANGED_ACTION -> requestPeers()
-                WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
-                    if (manager == null || channel == null) return
+                WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> requestPeers()
+                WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
+                    val m = manager ?: return
+                    val c = channel ?: return
                     if (!hasPermissions()) return
-                    manager.requestConnectionInfo(channel) { info ->
+                    m.requestConnectionInfo(c) { info ->
                         onConnectionInfo?.invoke(info)
                     }
                 }
-                WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
-                    @Suppress("DEPRECATION")
-                    val device = intent.getParcelableExtra<WifiP2pDevice>(EXTRA_WIFI_P2P_DEVICE)
+                WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
+                    val device: WifiP2pDevice? = intent.getParcelableExtra("wifiP2pDevice")
                     if (device != null) onThisDeviceChanged?.invoke(device)
                 }
             }
@@ -75,14 +71,16 @@ class WifiDirectManager(private val context: Context) {
 
     fun registerReceiver() {
         val filter = IntentFilter().apply {
-            addAction(WIFI_P2P_STATE_CHANGED_ACTION)
-            addAction(WIFI_P2P_PEERS_CHANGED_ACTION)
-            addAction(WIFI_P2P_CONNECTION_CHANGED_ACTION)
-            addAction(WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
+            addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
+            addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)
+            addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)
+            addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
         }
-        ContextCompat.registerReceiver(
-            context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        try {
+            context.registerReceiver(receiver, filter)
+        } catch (e: Exception) {
+            onStatusChanged?.invoke("Gagal register receiver: ${e.message}")
+        }
     }
 
     fun unregisterReceiver() {
@@ -91,20 +89,27 @@ class WifiDirectManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun discoverPeers() {
-        if (manager == null || channel == null) return
-        if (!hasPermissions()) { onStatusChanged?.invoke("Izin belum lengkap"); return }
+        val m = manager ?: return
+        val c = channel ?: return
+        if (!hasPermissions()) {
+            onStatusChanged?.invoke("Izin belum lengkap")
+            return
+        }
         onStatusChanged?.invoke("Mencari perangkat...")
-        manager.discoverPeers(channel, object : ActionListener {
+        m.discoverPeers(c, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Scan dimulai...") }
-            override fun onFailure(reason: Int) { onStatusChanged?.invoke("Gagal scan: $reason") }
+            override fun onFailure(reason: Int) {
+                onStatusChanged?.invoke("Gagal scan: kode $reason")
+            }
         })
     }
 
     @SuppressLint("MissingPermission")
     private fun requestPeers() {
-        if (manager == null || channel == null) return
+        val m = manager ?: return
+        val c = channel ?: return
         if (!hasPermissions()) return
-        manager.requestPeers(channel) { peerList ->
+        m.requestPeers(c) { peerList ->
             val devices = peerList.deviceList.toList()
             onPeersChanged?.invoke(devices)
             if (devices.isEmpty()) onStatusChanged?.invoke("Belum ada perangkat")
@@ -114,15 +119,18 @@ class WifiDirectManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun connect(device: WifiP2pDevice) {
-        if (manager == null || channel == null) return
-        if (!hasPermissions()) { onStatusChanged?.invoke("Izin belum lengkap"); return }
+        val m = manager ?: return
+        val c = channel ?: return
+        if (!hasPermissions()) {
+            onStatusChanged?.invoke("Izin belum lengkap")
+            return
+        }
 
         val config = WifiP2pConfig().apply {
             deviceAddress = device.deviceAddress
-            wps.setup = android.net.wifi.p2p.WpsInfo.PBC
         }
         onStatusChanged?.invoke("Menghubungkan ke ${device.deviceName}...")
-        manager.connect(channel, config, object : ActionListener {
+        m.connect(c, config, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Koneksi diproses...") }
             override fun onFailure(reason: Int) {
                 onStatusChanged?.invoke("Gagal connect: kode $reason")
@@ -132,10 +140,13 @@ class WifiDirectManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun disconnect() {
-        if (manager == null || channel == null) return
-        manager.removeGroup(channel, object : ActionListener {
+        val m = manager ?: return
+        val c = channel ?: return
+        m.removeGroup(c, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Terputus") }
-            override fun onFailure(reason: Int) { onStatusChanged?.invoke("Gagal putus: $reason") }
+            override fun onFailure(reason: Int) {
+                onStatusChanged?.invoke("Gagal putus: kode $reason")
+            }
         })
     }
 
@@ -145,7 +156,8 @@ class WifiDirectManager(private val context: Context) {
             perms.add(Manifest.permission.NEARBY_WIFI_DEVICES)
         }
         return perms.all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, it) ==
+                PackageManager.PERMISSION_GRANTED
         }
     }
 }
