@@ -1,5 +1,6 @@
 package com.example.offlinechat
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
@@ -18,11 +19,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: PeerAdapter
     private lateinit var statusText: TextView
     private lateinit var btnScan: Button
+    private lateinit var btnOpenChat: Button
     private lateinit var btnDisconnect: Button
 
     private var isConnected = false
+    private var isGroupOwner = false
     private var connectedPeerName: String? = null
-    private var myDeviceName: String = "?"
+    private var myDeviceName: String = "Saya"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,15 +33,13 @@ class MainActivity : AppCompatActivity() {
 
         statusText = findViewById(R.id.statusText)
         btnScan = findViewById(R.id.btnScan)
+        btnOpenChat = findViewById(R.id.btnOpenChat)
         btnDisconnect = findViewById(R.id.btnDisconnect)
         val list = findViewById<RecyclerView>(R.id.peerList)
 
         adapter = PeerAdapter { device ->
-            if (isConnected) {
-                Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
-            } else {
-                showConnectDialog(device)
-            }
+            if (isConnected) Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
+            else showConnectDialog(device)
         }
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
@@ -46,11 +47,7 @@ class MainActivity : AppCompatActivity() {
         wifiManager = WifiDirectManager(this).apply {
             onPeersChanged = { devices -> runOnUiThread { adapter.update(devices) } }
             onStatusChanged = { msg -> runOnUiThread { statusText.text = msg } }
-            onThisDeviceChanged = { dev ->
-                runOnUiThread {
-                    myDeviceName = dev.deviceName ?: "?"
-                }
-            }
+            onThisDeviceChanged = { dev -> runOnUiThread { myDeviceName = dev.deviceName ?: "Saya" } }
             onConnectionInfo = { info -> runOnUiThread { handleConnectionInfo(info) } }
         }
 
@@ -64,15 +61,23 @@ class MainActivity : AppCompatActivity() {
             else PermissionHelper.request(this)
         }
 
+        btnOpenChat.setOnClickListener {
+            val intent = Intent(this, ChatActivity::class.java).apply {
+                putExtra("isGroupOwner", isGroupOwner)
+                putExtra("myName", myDeviceName)
+                putExtra("peerName", connectedPeerName ?: "Peer")
+            }
+            startActivity(intent)
+        }
+
         btnDisconnect.setOnClickListener {
             wifiManager.disconnect()
             isConnected = false
             connectedPeerName = null
             btnDisconnect.visibility = Button.GONE
+            btnOpenChat.visibility = Button.GONE
             statusText.text = "Terputus"
         }
-
-        btnDisconnect.visibility = Button.GONE
 
         if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
     }
@@ -81,9 +86,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Hubungkan?")
             .setMessage("Connect ke ${device.deviceName ?: "perangkat"} ?")
-            .setPositiveButton("Hubungkan") { _, _ ->
-                wifiManager.connect(device)
-            }
+            .setPositiveButton("Hubungkan") { _, _ -> wifiManager.connect(device) }
             .setNegativeButton("Batal", null)
             .show()
     }
@@ -91,37 +94,23 @@ class MainActivity : AppCompatActivity() {
     private fun handleConnectionInfo(info: WifiP2pInfo) {
         if (info.groupFormed) {
             isConnected = true
-            val role = if (info.isGroupOwner) "Group Owner (Server)" else "Client"
-            val myIp = if (info.isGroupOwner) "192.168.49.1" else "?"
-            statusText.text = "✅ Terhubung sebagai $role\nIP server: ${info.groupOwnerAddress?.hostAddress}"
-            connectedPeerName = if (info.isGroupOwner) "Client" else "Server"
+            isGroupOwner = info.isGroupOwner
+            val role = if (isGroupOwner) "Group Owner (Server)" else "Client"
+            statusText.text = "✅ Terhubung sebagai $role\nIP: ${info.groupOwnerAddress?.hostAddress}"
+            connectedPeerName = if (isGroupOwner) "Client" else "Server"
             btnDisconnect.visibility = Button.VISIBLE
-
-            Toast.makeText(
-                this,
-                "Terhubung! Kamu: $role",
-                Toast.LENGTH_LONG
-            ).show()
-
-            // Info debug
-            println("Connection: isGO=${info.isGroupOwner}, GOAddr=${info.groupOwnerAddress?.hostAddress}")
+            btnOpenChat.visibility = Button.VISIBLE
         } else {
             isConnected = false
             connectedPeerName = null
             btnDisconnect.visibility = Button.GONE
+            btnOpenChat.visibility = Button.GONE
             statusText.text = "Belum terhubung"
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        wifiManager.registerReceiver()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        wifiManager.unregisterReceiver()
-    }
+    override fun onResume() { super.onResume(); wifiManager.registerReceiver() }
+    override fun onPause() { super.onPause(); wifiManager.unregisterReceiver() }
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray

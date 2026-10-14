@@ -28,11 +28,20 @@
         android:text="Cari Perangkat" />
 
     <Button
+        android:id="@+id/btnOpenChat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Buka Chat"
+        android:visibility="gone" />
+
+    <Button
         android:id="@+id/btnDisconnect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Putuskan Koneksi" />
+        android:text="Putuskan Koneksi"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="match_parent"
