@@ -109,25 +109,29 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun startTcpServer() {
-        tcpServer = ChatServer(8888,
-            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        tcpServer = ChatServer(
+            port = 8888,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         tcpServer?.start()
     }
 
     private fun startTcpClient() {
-        tcpClient = ChatClient("192.168.49.1", 8888,
-            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        tcpClient = ChatClient(
+            serverIp = "192.168.49.1",
+            port = 8888,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         tcpClient?.connect()
     }
 
     private fun startBtServer() {
-        btServer = BluetoothChatServer(this,
-            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        btServer = BluetoothChatServer(
+            context = this,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         btServer?.start()
     }
@@ -135,12 +139,13 @@ class ChatActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun startBtClient(address: String?) {
         if (address == null) { statusText.text = "Alamat BT kosong"; return }
-        val adapter = (getSystemService(BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager).adapter
-        val device = try { adapter?.getRemoteDevice(address) } catch (e: Exception) { null }
+        val btAdapter = (getSystemService(BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager).adapter
+        val device = try { btAdapter?.getRemoteDevice(address) } catch (e: Exception) { null }
         if (device == null) { statusText.text = "Device BT gak ditemukan"; return }
-        btClient = BluetoothChatClient(device,
-            onMessage = { msg -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s -> runOnUiThread { statusText.text = s } }
+        btClient = BluetoothChatClient(
+            device = device,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         btClient?.connect()
     }
