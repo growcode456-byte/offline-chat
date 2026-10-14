@@ -1,66 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F0F2F5">
 
-    <TextView
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="OfflineChat"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:paddingBottom="8dp" />
+        android:background="@drawable/header_bg"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:elevation="4dp">
 
-    <TextView
-        android:id="@+id/statusText"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="OfflineChat"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Siap"
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Siap"
-        android:textSize="14sp"
-        android:paddingBottom="12dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <Button
-        android:id="@+id/btnScan"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cari Perangkat" />
+        <Button
+            android:id="@+id/btnScan"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="📡  Cari (WiFi Direct)"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_green_light"
+            android:textColor="#FFFFFF" />
 
-    <Button
-        android:id="@+id/btnOpenChat"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Buka Chat"
-        android:visibility="gone" />
+        <Button
+            android:id="@+id/btnOpenChat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="💬  Buka Chat"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_accent"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
-    <Button
-        android:id="@+id/btnDisconnect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Putuskan Koneksi"
-        android:visibility="gone" />
+        <Button
+            android:id="@+id/btnDisconnect"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="❌  Putuskan Koneksi"
+            android:textSize="15sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
-    <Button
-        android:id="@+id/btnTestChat"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Test Chat (1 HP)" />
+        <Button
+            android:id="@+id/btnBluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="🔵  Chat Bluetooth"
+            android:textSize="15sp"
+            android:backgroundTint="#1565C0"
+            android:textColor="#FFFFFF" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Perangkat ditemukan:"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp"
-        android:textStyle="bold" />
+        <Button
+            android:id="@+id/btnTestChat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="🧪  Test Chat (1 HP)"
+            android:textSize="15sp"
+            android:backgroundTint="#6A1B9A"
+            android:textColor="#FFFFFF" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/peerList"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Perangkat ditemukan:"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/peerList"
+            android:layout_width="match_parent"
+            android:layout_height="400dp" />
+    </LinearLayout>
 </LinearLayout>
+</ScrollView>

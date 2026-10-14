@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_green">#075E54</color>
+    <color name="brand_green_light">#128C7E</color>
+    <color name="brand_accent">#25D366</color>
+    <color name="chat_bg">#ECE5DD</color>
+    <color name="bubble_me">#DCF8C6</color>
+    <color name="bubble_other">#FFFFFF</color>
+    <color name="text_primary">#111B21</color>
+    <color name="text_secondary">#667781</color>
+    <color name="input_bg">#FFFFFF</color>
+    <color name="dark_bg">#0B141A</color>
+    <color name="dark_bubble_me">#005C4B</color>
+    <color name="dark_bubble_other">#202C33</color>
+    <color name="dark_text">#E9EDEF</color>
+</resources>
