@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light mode -->
     <color name="brand_green">#075E54</color>
     <color name="brand_green_light">#128C7E</color>
     <color name="brand_accent">#25D366</color>
@@ -9,8 +10,5 @@
     <color name="text_primary">#111B21</color>
     <color name="text_secondary">#667781</color>
     <color name="input_bg">#FFFFFF</color>
-    <color name="dark_bg">#0B141A</color>
-    <color name="dark_bubble_me">#005C4B</color>
-    <color name="dark_bubble_other">#202C33</color>
-    <color name="dark_text">#E9EDEF</color>
+    <color name="home_bg">#F0F2F5</color>
 </resources>

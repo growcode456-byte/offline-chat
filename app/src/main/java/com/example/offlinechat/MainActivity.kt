@@ -12,11 +12,11 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var wifiManager: WifiDirectManager
     private lateinit var adapter: PeerAdapter
@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnDisconnect: Button
     private lateinit var btnTestChat: Button
     private lateinit var btnSettings: ImageButton
+    private lateinit var btnDarkMode: ImageButton
 
     private var isConnected = false
     private var isGroupOwner = false
@@ -44,10 +45,12 @@ class MainActivity : AppCompatActivity() {
         btnDisconnect = findViewById(R.id.btnDisconnect)
         btnTestChat = findViewById(R.id.btnTestChat)
         btnSettings = findViewById(R.id.btnSettings)
+        btnDarkMode = findViewById(R.id.btnDarkMode)
         val list = findViewById<RecyclerView>(R.id.peerList)
 
         myDeviceName = PrefsHelper.getName(this)
         myNameText.text = "Nama kamu: $myDeviceName"
+        updateDarkIcon()
 
         adapter = PeerAdapter { device ->
             if (isConnected) Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
@@ -85,9 +88,8 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        btnSettings.setOnClickListener {
-            showNameDialog()
-        }
+        btnSettings.setOnClickListener { showNameDialog() }
+        btnDarkMode.setOnClickListener { toggleDarkMode() }
 
         btnDisconnect.setOnClickListener {
             wifiManager.disconnect()
@@ -99,6 +101,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
+    }
+
+    private fun updateDarkIcon() {
+        val mode = PrefsHelper.getDarkMode(this)
+        val icon = when (mode) {
+            1 -> android.R.drawable.ic_menu_view  // dark aktif
+            0 -> android.R.drawable.ic_menu_view  // light aktif
+            else -> android.R.drawable.ic_menu_view  // follow system
+        }
+        btnDarkMode.setImageResource(icon)
+    }
+
+    private fun toggleDarkMode() {
+        val current = PrefsHelper.getDarkMode(this)
+        // cycle: -1 (system) -> 0 (light) -> 1 (dark) -> -1 (system)
+        val next = when (current) {
+            -1 -> 0
+            0 -> 1
+            else -> -1
+        }
+        PrefsHelper.setDarkMode(this, next)
+        val label = when (next) {
+            -1 -> "Ikut Sistem"
+            0 -> "Mode Terang"
+            else -> "Mode Gelap"
+        }
+        Toast.makeText(this, label, Toast.LENGTH_SHORT).show()
+
+        when (next) {
+            -1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
+        recreate()
     }
 
     private fun showNameDialog() {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode -->
+    <color name="brand_green">#1F2C33</color>
+    <color name="brand_green_light">#2A3942</color>
+    <color name="brand_accent">#00A884</color>
+    <color name="chat_bg">#0B141A</color>
+    <color name="bubble_me">#005C4B</color>
+    <color name="bubble_other">#202C33</color>
+    <color name="text_primary">#E9EDEF</color>
+    <color name="text_secondary">#8696A0</color>
+    <color name="input_bg">#2A3942</color>
+    <color name="home_bg">#0B141A</color>
+</resources>

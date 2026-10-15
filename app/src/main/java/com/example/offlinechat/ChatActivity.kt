@@ -8,13 +8,12 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : BaseActivity() {
 
     private lateinit var adapter: MessageAdapter
     private lateinit var db: AppDatabase
@@ -38,7 +37,7 @@ class ChatActivity : AppCompatActivity() {
         val wfdIsServer = intent.getBooleanExtra("isGroupOwner", false)
         val wfdPeer = intent.getStringExtra("peerName") ?: "Peer"
 
-        myName = intent.getStringExtra("myName") ?: "Saya"
+        myName = intent.getStringExtra("myName") ?: PrefsHelper.getName(this)
         chatId = if (isLoopback) "loopback" else "chat_$wfdPeer"
 
         statusText = findViewById(R.id.chatStatus)
@@ -57,7 +56,6 @@ class ChatActivity : AppCompatActivity() {
         list.layoutManager = lm
         list.adapter = adapter
 
-        // Load riwayat chat dari DB
         lifecycleScope.launch {
             db.messageDao().getMessages(chatId).collect { entities ->
                 val msgs = entities.map { it.toChatMessage() }
@@ -92,7 +90,6 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        // Tombol hapus riwayat (long press header)
         findViewById<TextView>(R.id.chatTitle).setOnLongClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Hapus Riwayat?")
@@ -121,7 +118,7 @@ class ChatActivity : AppCompatActivity() {
     private fun startTcpServer() {
         tcpServer = ChatServer(
             port = 8888,
-            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
             onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         tcpServer?.start()
@@ -131,14 +128,10 @@ class ChatActivity : AppCompatActivity() {
         tcpClient = ChatClient(
             serverIp = "192.168.49.1",
             port = 8888,
-            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
+            onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
             onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         tcpClient?.connect()
-    }
-
-    private fun addIncoming(msg: ChatMessage) {
-        addAndSave(msg.copy(isMine = false))
     }
 
     override fun onDestroy() {
