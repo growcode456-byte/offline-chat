@@ -63,41 +63,76 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layo
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
 
+        <TextView
+            android:id="@+id/myNameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nama kamu: Saya"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:paddingBottom="16dp"
+            android:textStyle="bold" />
 
+        <Button
+            android:id="@+id/btnScan"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Cari (WiFi Direct)"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_green_light"
+            android:textColor="#FFFFFF" />
 
-cd /workspaces/offline-chat
+        <Button
+            android:id="@+id/btnOpenChat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="Buka Chat"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_accent"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
-# 1. Update PrefsHelper - simpan preferensi dark mode
-cat > app/src/main/java/com/example/offlinechat/PrefsHelper.kt <<'EOF'
-package com.example.offlinechat
+        <Button
+            android:id="@+id/btnDisconnect"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="Putuskan Koneksi"
+            android:textSize="15sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
-import android.content.Context
+        <Button
+            android:id="@+id/btnTestChat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="Test Chat (1 HP)"
+            android:textSize="15sp"
+            android:backgroundTint="#6A1B9A"
+            android:textColor="#FFFFFF" />
 
-object PrefsHelper {
-    private const val PREFS = "offlinechat_prefs"
-    private const val KEY_NAME = "display_name"
-    private const val KEY_DARK_MODE = "dark_mode"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Perangkat ditemukan:"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
 
-    // -1 = follow system, 0 = light, 1 = dark
-    fun getDarkMode(context: Context): Int {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        return prefs.getInt(KEY_DARK_MODE, -1)
-    }
-
-    fun setDarkMode(context: Context, mode: Int) {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        prefs.edit().putInt(KEY_DARK_MODE, mode).apply()
-    }
-
-    fun getName(context: Context): String {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_NAME, "Saya") ?: "Saya"
-    }
-
-    fun setName(context: Context, name: String) {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        prefs.edit().putString(KEY_NAME, name).apply()
-    }
-}
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/peerList"
+            android:layout_width="match_parent"
+            android:layout_height="400dp" />
+    </LinearLayout>
+</LinearLayout>
+</ScrollView>
