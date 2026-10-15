@@ -20,6 +20,17 @@ class MessageAdapter : RecyclerView.Adapter<MessageAdapter.VH>() {
         notifyItemInserted(messages.size - 1)
     }
 
+    fun setMessages(list: List<ChatMessage>) {
+        messages.clear()
+        messages.addAll(list)
+        notifyDataSetChanged()
+    }
+
+    fun clear() {
+        messages.clear()
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item_message, parent, false)
         return VH(v)
@@ -27,8 +38,6 @@ class MessageAdapter : RecyclerView.Adapter<MessageAdapter.VH>() {
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val msg = messages[position]
-        val ctx = holder.itemView.context
-
         holder.text.text = msg.text
         holder.time.text = fmt.format(Date(msg.timestamp))
 

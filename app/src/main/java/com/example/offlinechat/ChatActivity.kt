@@ -6,19 +6,25 @@ import android.os.Looper
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 
 class ChatActivity : AppCompatActivity() {
 
     private lateinit var adapter: MessageAdapter
+    private lateinit var db: AppDatabase
     private var tcpServer: ChatServer? = null
     private var tcpClient: ChatClient? = null
 
     private var mode = "tcp"
     private var isServer = false
     private var myName = "Saya"
+    private var chatId = "default"
 
     private lateinit var statusText: TextView
     private lateinit var list: RecyclerView
@@ -33,6 +39,7 @@ class ChatActivity : AppCompatActivity() {
         val wfdPeer = intent.getStringExtra("peerName") ?: "Peer"
 
         myName = intent.getStringExtra("myName") ?: "Saya"
+        chatId = if (isLoopback) "loopback" else "chat_$wfdPeer"
 
         statusText = findViewById(R.id.chatStatus)
         list = findViewById(R.id.messageList)
@@ -42,15 +49,26 @@ class ChatActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.chatTitle).text =
             if (isLoopback) "Test Chat (1 HP)" else "Chat WFD: $wfdPeer"
 
+        db = AppDatabase.get(this)
+
         adapter = MessageAdapter()
         val lm = LinearLayoutManager(this)
         lm.stackFromEnd = true
         list.layoutManager = lm
         list.adapter = adapter
 
+        // Load riwayat chat dari DB
+        lifecycleScope.launch {
+            db.messageDao().getMessages(chatId).collect { entities ->
+                val msgs = entities.map { it.toChatMessage() }
+                adapter.setMessages(msgs)
+                if (msgs.isNotEmpty()) list.scrollToPosition(msgs.size - 1)
+            }
+        }
+
         if (isLoopback) {
             mode = "loopback"
-            statusText.text = "Mode test lokal"
+            statusText.text = "Mode test lokal (tersimpan)"
         } else {
             mode = "tcp"
             isServer = wfdIsServer
@@ -62,29 +80,41 @@ class ChatActivity : AppCompatActivity() {
             val text = input.text.toString().trim()
             if (text.isEmpty()) return@setOnClickListener
             val msg = ChatMessage(myName, text, System.currentTimeMillis(), isMine = true)
-            adapter.addMessage(msg)
-            list.scrollToPosition(adapter.itemCount - 1)
+            addAndSave(msg)
             input.setText("")
 
             when (mode) {
                 "loopback" -> handler.postDelayed({
                     val echo = ChatMessage("Echo Bot", "Echo: $text", System.currentTimeMillis())
-                    adapter.addMessage(echo)
-                    list.scrollToPosition(adapter.itemCount - 1)
+                    addAndSave(echo)
                 }, 600)
                 else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
             }
         }
 
-        if (isLoopback) {
-            handler.postDelayed({
-                val welcome = ChatMessage(
-                    "Echo Bot",
-                    "Halo! Ketik pesan apa aja, nanti aku balas.",
-                    System.currentTimeMillis()
-                )
-                adapter.addMessage(welcome)
-            }, 300)
+        // Tombol hapus riwayat (long press header)
+        findViewById<TextView>(R.id.chatTitle).setOnLongClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Hapus Riwayat?")
+                .setMessage("Semua chat di sini bakal dihapus.")
+                .setPositiveButton("Hapus") { _, _ ->
+                    lifecycleScope.launch {
+                        db.messageDao().clearChat(chatId)
+                        adapter.clear()
+                        Toast.makeText(this@ChatActivity, "Riwayat dihapus", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNegativeButton("Batal", null)
+                .show()
+            true
+        }
+    }
+
+    private fun addAndSave(msg: ChatMessage) {
+        adapter.addMessage(msg)
+        list.scrollToPosition(adapter.itemCount - 1)
+        lifecycleScope.launch {
+            db.messageDao().insert(msg.toEntity(chatId))
         }
     }
 
@@ -108,8 +138,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun addIncoming(msg: ChatMessage) {
-        adapter.addMessage(msg.copy(isMine = false))
-        list.scrollToPosition(adapter.itemCount - 1)
+        addAndSave(msg.copy(isMine = false))
     }
 
     override fun onDestroy() {
