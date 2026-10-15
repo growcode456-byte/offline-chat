@@ -53,9 +53,7 @@ class MainActivity : AppCompatActivity() {
             onConnectionInfo = { info -> runOnUiThread { handleConnectionInfo(info) } }
         }
 
-        if (!wifiManager.init()) {
-            statusText.text = "WiFi Direct gak didukung"
-        }
+        if (!wifiManager.init()) statusText.text = "WiFi Direct gak didukung"
 
         btnScan.setOnClickListener {
             if (PermissionHelper.hasAll(this)) wifiManager.discoverPeers()
@@ -72,11 +70,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnTestChat.setOnClickListener {
-            val intent = Intent(this, ChatActivity::class.java).apply {
+            startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("loopback", true)
                 putExtra("myName", myDeviceName)
-            }
-            startActivity(intent)
+            })
         }
 
         btnDisconnect.setOnClickListener {
@@ -105,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             isConnected = true
             isGroupOwner = info.isGroupOwner
             val role = if (isGroupOwner) "Group Owner (Server)" else "Client"
-            statusText.text = "✅ Terhubung sebagai $role\nIP: ${info.groupOwnerAddress?.hostAddress}"
+            statusText.text = "Terhubung sebagai $role\nIP: ${info.groupOwnerAddress?.hostAddress}"
             connectedPeerName = if (isGroupOwner) "Client" else "Server"
             btnDisconnect.visibility = Button.VISIBLE
             btnOpenChat.visibility = Button.VISIBLE

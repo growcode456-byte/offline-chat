@@ -9,7 +9,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -46,7 +45,7 @@
             android:id="@+id/btnScan"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="📡  Cari (WiFi Direct)"
+            android:text="Cari (WiFi Direct)"
             android:textSize="15sp"
             android:backgroundTint="@color/brand_green_light"
             android:textColor="#FFFFFF" />
@@ -56,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="8dp"
-            android:text="💬  Buka Chat"
+            android:text="Buka Chat"
             android:textSize="15sp"
             android:backgroundTint="@color/brand_accent"
             android:textColor="#FFFFFF"
@@ -67,28 +66,18 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="8dp"
-            android:text="❌  Putuskan Koneksi"
+            android:text="Putuskan Koneksi"
             android:textSize="15sp"
             android:backgroundTint="#E53935"
             android:textColor="#FFFFFF"
             android:visibility="gone" />
 
         <Button
-            android:id="@+id/btnBluetooth"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:text="🔵  Chat Bluetooth"
-            android:textSize="15sp"
-            android:backgroundTint="#1565C0"
-            android:textColor="#FFFFFF" />
-
-        <Button
             android:id="@+id/btnTestChat"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="8dp"
-            android:text="🧪  Test Chat (1 HP)"
+            android:text="Test Chat (1 HP)"
             android:textSize="15sp"
             android:backgroundTint="#6A1B9A"
             android:textColor="#FFFFFF" />

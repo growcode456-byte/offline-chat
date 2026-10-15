@@ -1,6 +1,5 @@
 package com.example.offlinechat
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,8 +15,6 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var adapter: MessageAdapter
     private var tcpServer: ChatServer? = null
     private var tcpClient: ChatClient? = null
-    private var btServer: BluetoothChatServer? = null
-    private var btClient: BluetoothChatClient? = null
 
     private var mode = "tcp"
     private var isServer = false
@@ -32,10 +29,6 @@ class ChatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_chat)
 
         val isLoopback = intent.getBooleanExtra("loopback", false)
-        val btMode = intent.getBooleanExtra("btMode", false)
-        val btIsServer = intent.getBooleanExtra("btIsServer", false)
-        val btAddress = intent.getStringExtra("btAddress")
-        val btName = intent.getStringExtra("btName") ?: "Peer"
         val wfdIsServer = intent.getBooleanExtra("isGroupOwner", false)
         val wfdPeer = intent.getStringExtra("peerName") ?: "Peer"
 
@@ -46,11 +39,8 @@ class ChatActivity : AppCompatActivity() {
         val input = findViewById<EditText>(R.id.messageInput)
         val btnSend = findViewById<ImageButton>(R.id.btnSend)
 
-        findViewById<TextView>(R.id.chatTitle).text = when {
-            isLoopback -> "Test Chat (1 HP)"
-            btMode -> "Chat BT: $btName"
-            else -> "Chat WFD: $wfdPeer"
-        }
+        findViewById<TextView>(R.id.chatTitle).text =
+            if (isLoopback) "Test Chat (1 HP)" else "Chat WFD: $wfdPeer"
 
         adapter = MessageAdapter()
         val lm = LinearLayoutManager(this)
@@ -58,23 +48,14 @@ class ChatActivity : AppCompatActivity() {
         list.layoutManager = lm
         list.adapter = adapter
 
-        when {
-            isLoopback -> {
-                mode = "loopback"
-                statusText.text = "Mode test lokal"
-            }
-            btMode -> {
-                mode = "bt"
-                isServer = btIsServer
-                statusText.text = if (isServer) "BT Server..." else "BT Client..."
-                if (isServer) startBtServer() else startBtClient(btAddress)
-            }
-            else -> {
-                mode = "tcp"
-                isServer = wfdIsServer
-                statusText.text = if (isServer) "TCP Server" else "TCP Client"
-                if (isServer) startTcpServer() else startTcpClient()
-            }
+        if (isLoopback) {
+            mode = "loopback"
+            statusText.text = "Mode test lokal"
+        } else {
+            mode = "tcp"
+            isServer = wfdIsServer
+            statusText.text = if (isServer) "TCP Server" else "TCP Client"
+            if (isServer) startTcpServer() else startTcpClient()
         }
 
         btnSend.setOnClickListener {
@@ -91,7 +72,6 @@ class ChatActivity : AppCompatActivity() {
                     adapter.addMessage(echo)
                     list.scrollToPosition(adapter.itemCount - 1)
                 }, 600)
-                "bt" -> if (isServer) btServer?.send(msg) else btClient?.send(msg)
                 else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
             }
         }
@@ -127,29 +107,6 @@ class ChatActivity : AppCompatActivity() {
         tcpClient?.connect()
     }
 
-    private fun startBtServer() {
-        btServer = BluetoothChatServer(
-            context = this,
-            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
-        )
-        btServer?.start()
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun startBtClient(address: String?) {
-        if (address == null) { statusText.text = "Alamat BT kosong"; return }
-        val btAdapter = (getSystemService(BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager).adapter
-        val device = try { btAdapter?.getRemoteDevice(address) } catch (e: Exception) { null }
-        if (device == null) { statusText.text = "Device BT gak ditemukan"; return }
-        btClient = BluetoothChatClient(
-            device = device,
-            onMessage = { msg: ChatMessage -> runOnUiThread { addIncoming(msg) } },
-            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
-        )
-        btClient?.connect()
-    }
-
     private fun addIncoming(msg: ChatMessage) {
         adapter.addMessage(msg.copy(isMine = false))
         list.scrollToPosition(adapter.itemCount - 1)
@@ -159,6 +116,5 @@ class ChatActivity : AppCompatActivity() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
         tcpServer?.stop(); tcpClient?.stop()
-        btServer?.stop(); btClient?.stop()
     }
 }
