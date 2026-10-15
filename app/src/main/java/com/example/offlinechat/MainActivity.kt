@@ -5,7 +5,10 @@ import android.content.pm.PackageManager
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.os.Bundle
+import android.text.InputType
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -18,10 +21,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiManager: WifiDirectManager
     private lateinit var adapter: PeerAdapter
     private lateinit var statusText: TextView
+    private lateinit var myNameText: TextView
     private lateinit var btnScan: Button
     private lateinit var btnOpenChat: Button
     private lateinit var btnDisconnect: Button
     private lateinit var btnTestChat: Button
+    private lateinit var btnSettings: ImageButton
 
     private var isConnected = false
     private var isGroupOwner = false
@@ -33,11 +38,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         statusText = findViewById(R.id.statusText)
+        myNameText = findViewById(R.id.myNameText)
         btnScan = findViewById(R.id.btnScan)
         btnOpenChat = findViewById(R.id.btnOpenChat)
         btnDisconnect = findViewById(R.id.btnDisconnect)
         btnTestChat = findViewById(R.id.btnTestChat)
+        btnSettings = findViewById(R.id.btnSettings)
         val list = findViewById<RecyclerView>(R.id.peerList)
+
+        myDeviceName = PrefsHelper.getName(this)
+        myNameText.text = "Nama kamu: $myDeviceName"
 
         adapter = PeerAdapter { device ->
             if (isConnected) Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
@@ -49,7 +59,6 @@ class MainActivity : AppCompatActivity() {
         wifiManager = WifiDirectManager(this).apply {
             onPeersChanged = { devices -> runOnUiThread { adapter.update(devices) } }
             onStatusChanged = { msg -> runOnUiThread { statusText.text = msg } }
-            onThisDeviceChanged = { dev -> runOnUiThread { myDeviceName = dev.deviceName ?: "Saya" } }
             onConnectionInfo = { info -> runOnUiThread { handleConnectionInfo(info) } }
         }
 
@@ -76,6 +85,10 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
+        btnSettings.setOnClickListener {
+            showNameDialog()
+        }
+
         btnDisconnect.setOnClickListener {
             wifiManager.disconnect()
             isConnected = false
@@ -86,6 +99,32 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
+    }
+
+    private fun showNameDialog() {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            setText(myDeviceName)
+            setSelection(text.length)
+            setPadding(40, 30, 40, 30)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Nama Tampilan")
+            .setMessage("Nama ini muncul saat orang lain menemukan HP kamu")
+            .setView(input)
+            .setPositiveButton("Simpan") { _, _ ->
+                val newName = input.text.toString().trim()
+                if (newName.isEmpty()) {
+                    Toast.makeText(this, "Nama gak boleh kosong", Toast.LENGTH_SHORT).show()
+                } else {
+                    myDeviceName = newName
+                    PrefsHelper.setName(this, newName)
+                    myNameText.text = "Nama kamu: $newName"
+                    Toast.makeText(this, "Tersimpan!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     private fun showConnectDialog(device: WifiP2pDevice) {

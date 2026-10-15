@@ -13,26 +13,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/header_bg"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:padding="20dp"
+        android:gravity="center_vertical"
         android:elevation="4dp">
 
-        <TextView
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="OfflineChat"
-            android:textColor="#FFFFFF"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Siap"
-            android:textColor="#CCFFFFFF"
-            android:textSize="13sp"
-            android:paddingTop="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="OfflineChat"
+                android:textColor="#FFFFFF"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Siap"
+                android:textColor="#CCFFFFFF"
+                android:textSize="13sp"
+                android:paddingTop="4dp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:tint="#FFFFFF"
+            android:contentDescription="Pengaturan" />
     </LinearLayout>
 
     <LinearLayout
@@ -40,6 +57,16 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
+
+        <TextView
+            android:id="@+id/myNameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nama kamu: Saya"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:paddingBottom="16dp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnScan"
