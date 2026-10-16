@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
-import android.widget.ImageButton
+import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,21 +30,21 @@ class WallpaperActivity : BaseActivity() {
 
         previewImage = findViewById(R.id.wallpaperPreview)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<ImageButton>(R.id.btnPickWallpaper).setOnClickListener {
+        // Pakai View generic, biar gak masalah MaterialButton vs ImageButton
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<View>(R.id.btnPickWallpaper).setOnClickListener {
             pickWallpaper.launch("image/*")
         }
-        findViewById<ImageButton>(R.id.btnResetWallpaper).setOnClickListener {
+        findViewById<View>(R.id.btnResetWallpaper).setOnClickListener {
             PrefsHelper.setWallpaper(this, null)
             Toast.makeText(this, "Wallpaper dihapus", Toast.LENGTH_SHORT).show()
             previewImage.setImageResource(R.drawable.wallpaper_default)
         }
-        findViewById<ImageButton>(R.id.btnSaveWallpaper).setOnClickListener {
+        findViewById<View>(R.id.btnSaveWallpaper).setOnClickListener {
             Toast.makeText(this, "Wallpaper tersimpan!", Toast.LENGTH_SHORT).show()
             finish()
         }
 
-        // Load existing
         val existing = PrefsHelper.getWallpaper(this)
         if (existing != null) applyWallpaper(existing)
         else previewImage.setImageResource(R.drawable.wallpaper_default)
@@ -60,7 +60,6 @@ class WallpaperActivity : BaseActivity() {
                     inputStream.close()
                     if (original == null) return@withContext null
 
-                    // Resize max 1080px width
                     val maxW = 1080
                     val bmp = if (original.width > maxW) {
                         val ratio = original.height.toFloat() / original.width.toFloat()
