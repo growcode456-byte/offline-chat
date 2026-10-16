@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/home_bg">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Avatar -->
+            <!-- Avatar bulat pakai CardView -->
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -53,15 +53,21 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="24dp">
 
-                <ImageView
-                    android:id="@+id/profileAvatar"
+                <androidx.cardview.widget.CardView
                     android:layout_width="140dp"
                     android:layout_height="140dp"
-                    android:background="@drawable/send_button_bg"
-                    android:padding="8dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/splash_logo"
-                    android:contentDescription="Avatar" />
+                    app:cardCornerRadius="70dp"
+                    app:cardElevation="2dp">
+
+                    <ImageView
+                        android:id="@+id/profileAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/brand_accent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/splash_logo"
+                        android:contentDescription="Avatar" />
+                </androidx.cardview.widget.CardView>
 
                 <ImageButton
                     android:id="@+id/btnPickAvatar"
@@ -156,7 +162,6 @@
                     android:maxLength="60" />
             </LinearLayout>
 
-            <!-- Quick status -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -168,7 +173,6 @@
                 android:paddingStart="4dp" />
 
             <com.google.android.material.chip.ChipGroup
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/chipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -176,7 +180,6 @@
                 app:chipSpacingHorizontal="6dp"
                 app:chipSpacingVertical="6dp" />
 
-            <!-- Save button -->
             <Button
                 android:id="@+id/btnSaveProfile"
                 android:layout_width="match_parent"

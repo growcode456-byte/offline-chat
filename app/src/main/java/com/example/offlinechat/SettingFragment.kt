@@ -1,10 +1,13 @@
 package com.example.offlinechat
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -17,6 +20,7 @@ class SettingFragment : Fragment() {
 
     private lateinit var settingName: TextView
     private lateinit var settingStatus: TextView
+    private lateinit var settingAvatar: ImageView
     private lateinit var darkModeValue: TextView
 
     override fun onCreateView(
@@ -30,6 +34,7 @@ class SettingFragment : Fragment() {
 
         settingName = view.findViewById(R.id.settingName)
         settingStatus = view.findViewById(R.id.settingStatus)
+        settingAvatar = view.findViewById(R.id.settingAvatar)
         darkModeValue = view.findViewById(R.id.darkModeValue)
 
         view.findViewById<View>(R.id.cardName).setOnClickListener {
@@ -57,9 +62,22 @@ class SettingFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        refreshProfile()
+    }
+
+    private fun refreshProfile() {
         settingName.text = PrefsHelper.getName(requireContext())
         settingStatus.text = PrefsHelper.getStatus(requireContext())
         updateDarkLabel()
+
+        val avatarBase64 = PrefsHelper.getAvatar(requireContext())
+        if (avatarBase64 != null) {
+            try {
+                val bytes = Base64.decode(avatarBase64, Base64.DEFAULT)
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bmp != null) settingAvatar.setImageBitmap(bmp)
+            } catch (e: Exception) {}
+        }
     }
 
     private fun updateDarkLabel() {
