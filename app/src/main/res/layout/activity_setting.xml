@@ -33,25 +33,25 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Profile card -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
+            app:cardElevation="2dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
 
             <LinearLayout
-                android:id="@+id/cardName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp"
-                android:gravity="center_vertical"
-                android:background="?android:attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
+                android:gravity="center_vertical">
 
                 <ImageView
+                    android:id="@+id/settingAvatar"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:src="@drawable/splash_logo"
@@ -87,7 +87,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- TAMPILAN -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -134,7 +133,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- CHAT -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -225,7 +223,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- TENTANG -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
