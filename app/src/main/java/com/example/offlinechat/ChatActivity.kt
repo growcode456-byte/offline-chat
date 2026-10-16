@@ -3,9 +3,7 @@ package com.example.offlinechat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.BitmapFactory
-import android.util.Base64
-import android.widget.ImageView
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -16,6 +14,7 @@ import android.util.Base64
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,15 +67,7 @@ class ChatActivity : BaseActivity() {
 
     private val pickImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) handleImagePicked(uri, fromCamera = false)
-    }
-
-    private val takePicture = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) handleImagePicked(uri, fromCamera = true)
-    }
+    ) { uri: Uri? -> if (uri != null) handleImagePicked(uri) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,8 +86,6 @@ class ChatActivity : BaseActivity() {
             isLoopback -> "loopback"
             else -> "chat_$wfdPeer"
         }
-
-        applyWallpaper()
 
         statusText = findViewById(R.id.chatStatus)
         list = findViewById(R.id.messageList)
@@ -122,6 +111,7 @@ class ChatActivity : BaseActivity() {
         list.adapter = adapter
 
         setupEmojiPanel()
+        applyWallpaper()
 
         lifecycleScope.launch {
             db.messageDao().getMessages(chatId).collect { entities ->
@@ -144,7 +134,6 @@ class ChatActivity : BaseActivity() {
             if (isServer) startTcpServer() else startTcpClient()
         }
 
-        // Update tombol send: kalau ada text → kirim, kalau kosong → mic
         input.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {
@@ -166,7 +155,7 @@ class ChatActivity : BaseActivity() {
 
         btnEmoji.setOnClickListener { toggleEmojiPanel() }
         btnAttach.setOnClickListener { pickImage.launch("image/*") }
-        btnCamera.setOnClickListener { takePicture.launch("image/*") }
+        btnCamera.setOnClickListener { pickImage.launch("image/*") }
 
         findViewById<TextView>(R.id.chatTitle).setOnLongClickListener {
             AlertDialog.Builder(this)
@@ -186,21 +175,20 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun applyWallpaper() {
-        val root = findViewById<android.widget.LinearLayout>(android.R.id.content)
-        if (root == null || root.childCount == 0) return
-        val parent = root.getChildAt(0) as? android.widget.LinearLayout ?: return
-
-        val wp = PrefsHelper.getWallpaper(this)
-        if (wp != null) {
-            try {
-                val bytes = Base64.decode(wp, Base64.DEFAULT)
-                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                if (bmp != null) {
-                    val drawable = android.graphics.drawable.BitmapDrawable(resources, bmp)
-                    parent.background = drawable
+        val wp = PrefsHelper.getWallpaper(this) ?: return
+        try {
+            val bytes = Base64.decode(wp, Base64.DEFAULT)
+            val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return
+            val root = findViewById<View>(android.R.id.content)
+            if (root is LinearLayout) {
+                root.setBackgroundDrawable(BitmapDrawable(resources, bmp))
+            } else if (root is android.view.ViewGroup) {
+                val child = root.getChildAt(0)
+                if (child is LinearLayout) {
+                    child.background = BitmapDrawable(resources, bmp)
                 }
-            } catch (e: Exception) {}
-        }
+            }
+        } catch (e: Exception) {}
     }
 
     private fun updateSendButton(hasText: Boolean) {
@@ -211,11 +199,8 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun toggleEmojiPanel() {
-        if (emojiPanel.visibility == View.VISIBLE) {
-            emojiPanel.visibility = View.GONE
-        } else {
-            emojiPanel.visibility = View.VISIBLE
-        }
+        if (emojiPanel.visibility == View.VISIBLE) emojiPanel.visibility = View.GONE
+        else emojiPanel.visibility = View.VISIBLE
     }
 
     private fun setupEmojiPanel() {
@@ -223,7 +208,7 @@ class ChatActivity : BaseActivity() {
         grid.layoutManager = GridLayoutManager(this, 8)
         grid.adapter = EmojiAdapter(EmojiPicker.ALL) { emoji ->
             val cur = input.text.toString()
-            val sel = input.selectionStart
+            val sel = input.selectionStart.coerceAtLeast(0)
             val newText = cur.substring(0, sel) + emoji + cur.substring(sel)
             input.setText(newText)
             input.setSelection(sel + emoji.length)
@@ -237,7 +222,6 @@ class ChatActivity : BaseActivity() {
     private fun sendMessage(text: String) {
         val msg = ChatMessage(myName, text, System.currentTimeMillis(), isMine = true)
         addAndSave(msg)
-
         when (mode) {
             "group" -> simulateGroupReplies(text)
             "loopback" -> handler.postDelayed({
@@ -251,7 +235,6 @@ class ChatActivity : BaseActivity() {
     private fun simulateGroupReplies(userText: String) {
         val repliers = groupBots.shuffled().take(Random.nextInt(1, groupBots.size + 1))
         var delay = 600L
-
         repliers.forEach { bot ->
             handler.postDelayed({
                 val reply = when {
@@ -260,8 +243,7 @@ class ChatActivity : BaseActivity() {
                     else -> bot.replies.random()
                 }
                 val echo = ChatMessage(
-                    from = bot.name,
-                    text = reply,
+                    from = bot.name, text = reply,
                     timestamp = System.currentTimeMillis(),
                     senderColor = bot.color
                 )
@@ -271,7 +253,7 @@ class ChatActivity : BaseActivity() {
         }
     }
 
-    private fun handleImagePicked(uri: Uri, fromCamera: Boolean) {
+    private fun handleImagePicked(uri: Uri) {
         lifecycleScope.launch {
             try {
                 val base64 = withContext(Dispatchers.IO) {
@@ -286,13 +268,8 @@ class ChatActivity : BaseActivity() {
                         val ratio = original.width.toFloat() / original.height.toFloat()
                         val newW: Int
                         val newH: Int
-                        if (ratio > 1) {
-                            newW = maxSize
-                            newH = (maxSize / ratio).toInt()
-                        } else {
-                            newH = maxSize
-                            newW = (maxSize * ratio).toInt()
-                        }
+                        if (ratio > 1) { newW = maxSize; newH = (maxSize / ratio).toInt() }
+                        else { newH = maxSize; newW = (maxSize * ratio).toInt() }
                         Bitmap.createScaledBitmap(original, newW, newH, true)
                     } else original
 
@@ -307,11 +284,9 @@ class ChatActivity : BaseActivity() {
                 }
 
                 val msg = ChatMessage(
-                    from = myName,
-                    text = "",
+                    from = myName, text = "",
                     timestamp = System.currentTimeMillis(),
-                    isMine = true,
-                    imageData = base64
+                    isMine = true, imageData = base64
                 )
                 addAndSave(msg)
 
@@ -319,8 +294,7 @@ class ChatActivity : BaseActivity() {
                     "group" -> handler.postDelayed({
                         val bot = groupBots.random()
                         val echo = ChatMessage(
-                            from = bot.name,
-                            text = "Gambar keren! 📷",
+                            from = bot.name, text = "Gambar keren! 📷",
                             timestamp = System.currentTimeMillis(),
                             senderColor = bot.color
                         )
