@@ -10,9 +10,10 @@ data class MessageEntity(
     val text: String,
     val timestamp: Long,
     val isMine: Boolean,
-    val chatId: String
+    val chatId: String,
+    val imageData: String? = null
 ) {
-    fun toChatMessage(): ChatMessage = ChatMessage(from, text, timestamp, isMine)
+    fun toChatMessage(): ChatMessage = ChatMessage(from, text, timestamp, isMine, imageData)
 }
 
 fun ChatMessage.toEntity(chatId: String): MessageEntity = MessageEntity(
@@ -20,5 +21,6 @@ fun ChatMessage.toEntity(chatId: String): MessageEntity = MessageEntity(
     text = text,
     timestamp = timestamp,
     isMine = isMine,
-    chatId = chatId
+    chatId = chatId,
+    imageData = imageData
 )

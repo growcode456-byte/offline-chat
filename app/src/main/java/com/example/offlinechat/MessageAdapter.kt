@@ -1,10 +1,13 @@
 package com.example.offlinechat
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -118,10 +121,30 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         val bubble: LinearLayout = v.findViewById(R.id.bubbleContainer)
         val text: TextView = v.findViewById(R.id.messageText)
         val time: TextView = v.findViewById(R.id.messageTime)
+        val image: ImageView = v.findViewById(R.id.messageImage)
 
         fun bind(msg: ChatMessage) {
             text.text = msg.text
             time.text = fmt.format(Date(msg.timestamp))
+
+            if (msg.imageData != null) {
+                try {
+                    val bytes = Base64.decode(msg.imageData, Base64.DEFAULT)
+                    val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    image.setImageBitmap(bmp)
+                    image.visibility = View.VISIBLE
+                } catch (e: Exception) {
+                    image.visibility = View.GONE
+                }
+            } else {
+                image.visibility = View.GONE
+            }
+
+            if (msg.text.isNullOrEmpty() && msg.imageData != null) {
+                text.visibility = View.GONE
+            } else {
+                text.visibility = View.VISIBLE
+            }
 
             val params = bubble.layoutParams as LinearLayout.LayoutParams
             if (msg.isMine) {
@@ -135,7 +158,6 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             }
             bubble.layoutParams = params
 
-            // Animasi fade in + slide up
             val anim = AnimationUtils.loadAnimation(itemView.context, android.R.anim.fade_in)
             anim.duration = 200
             itemView.startAnimation(anim)

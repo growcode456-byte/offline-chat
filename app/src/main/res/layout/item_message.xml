@@ -14,9 +14,20 @@
         android:maxWidth="280dp"
         android:background="@drawable/bubble_other"
         android:orientation="vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingTop="8dp"
+        android:paddingHorizontal="6dp"
+        android:paddingTop="6dp"
         android:paddingBottom="4dp">
+
+        <ImageView
+            android:id="@+id/messageImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="260dp"
+            android:maxHeight="260dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:contentDescription="Gambar" />
 
         <TextView
             android:id="@+id/messageText"
@@ -26,7 +37,8 @@
             android:textColor="@color/text_primary"
             android:textSize="15sp"
             android:lineSpacingExtra="2dp"
-            android:fontFamily="sans-serif" />
+            android:paddingHorizontal="6dp"
+            android:paddingTop="4dp" />
 
         <TextView
             android:id="@+id/messageTime"
@@ -36,6 +48,7 @@
             android:text="00:00"
             android:textColor="@color/text_secondary"
             android:textSize="10sp"
+            android:paddingHorizontal="6dp"
             android:paddingTop="2dp" />
     </LinearLayout>
 </LinearLayout>

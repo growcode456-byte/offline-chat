@@ -6,16 +6,31 @@ data class ChatMessage(
     val from: String,
     val text: String,
     val timestamp: Long,
-    val isMine: Boolean = false
+    val isMine: Boolean = false,
+    val imageData: String? = null  // base64 kalau ada gambar
 ) {
-    fun toJson(): String = JSONObject().apply {
-        put("from", from); put("text", text); put("ts", timestamp)
-    }.toString()
+    fun toJson(): String {
+        val o = JSONObject()
+        o.put("from", from)
+        o.put("text", text)
+        o.put("ts", timestamp)
+        if (imageData != null) o.put("img", imageData)
+        return o.toString()
+    }
 
     companion object {
-        fun fromJson(s: String): ChatMessage? = try {
-            val o = JSONObject(s)
-            ChatMessage(o.getString("from"), o.getString("text"), o.getLong("ts"))
-        } catch (e: Exception) { null }
+        fun fromJson(s: String): ChatMessage? {
+            return try {
+                val o = JSONObject(s)
+                ChatMessage(
+                    from = o.getString("from"),
+                    text = o.getString("text"),
+                    timestamp = o.getLong("ts"),
+                    imageData = if (o.has("img")) o.getString("img") else null
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 }
