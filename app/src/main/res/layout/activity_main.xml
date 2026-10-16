@@ -3,12 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/home_bg">
-
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,13 +15,11 @@
         android:padding="20dp"
         android:gravity="center_vertical"
         android:elevation="4dp">
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -31,7 +27,6 @@
                 android:textColor="#FFFFFF"
                 android:textSize="26sp"
                 android:textStyle="bold" />
-
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="match_parent"
@@ -41,7 +36,6 @@
                 android:textSize="13sp"
                 android:paddingTop="4dp" />
         </LinearLayout>
-
         <ImageButton
             android:id="@+id/btnDarkMode"
             android:layout_width="44dp"
@@ -51,7 +45,6 @@
             android:src="@android:drawable/ic_menu_view"
             android:tint="#FFFFFF"
             android:contentDescription="Mode" />
-
         <ImageButton
             android:id="@+id/btnSettings"
             android:layout_width="44dp"
@@ -61,13 +54,11 @@
             android:tint="#FFFFFF"
             android:contentDescription="Pengaturan" />
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
-
         <TextView
             android:id="@+id/myNameText"
             android:layout_width="match_parent"
@@ -77,7 +68,6 @@
             android:textColor="@color/text_primary"
             android:paddingBottom="16dp"
             android:textStyle="bold" />
-
         <Button
             android:id="@+id/btnScan"
             android:layout_width="match_parent"
@@ -86,7 +76,6 @@
             android:textSize="15sp"
             android:backgroundTint="@color/brand_green_light"
             android:textColor="#FFFFFF" />
-
         <Button
             android:id="@+id/btnOpenChat"
             android:layout_width="match_parent"
@@ -97,7 +86,6 @@
             android:backgroundTint="@color/brand_accent"
             android:textColor="#FFFFFF"
             android:visibility="gone" />
-
         <Button
             android:id="@+id/btnDisconnect"
             android:layout_width="match_parent"
@@ -108,17 +96,41 @@
             android:backgroundTint="#E53935"
             android:textColor="#FFFFFF"
             android:visibility="gone" />
-
+        <LinearLayout
+            android:id="@+id/debugPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#1A1A1A"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:visibility="gone">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug Info"
+                android:textColor="#00FF00"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/debugText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#00FF00"
+                android:textSize="10sp"
+                android:fontFamily="monospace"
+                android:paddingTop="4dp" />
+        </LinearLayout>
         <Button
             android:id="@+id/btnTestChat"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:text="Test Chat (1 HP)"
             android:textSize="15sp"
             android:backgroundTint="#6A1B9A"
             android:textColor="#FFFFFF" />
-
         <Button
             android:id="@+id/btnGroupChat"
             android:layout_width="match_parent"
@@ -128,7 +140,6 @@
             android:textSize="15sp"
             android:backgroundTint="#00897B"
             android:textColor="#FFFFFF" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -138,7 +149,6 @@
             android:textStyle="bold"
             android:textSize="14sp"
             android:textColor="@color/text_primary" />
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/peerList"
             android:layout_width="match_parent"

@@ -2,13 +2,16 @@ package com.example.offlinechat
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -22,6 +25,8 @@ class MainActivity : BaseActivity() {
     private lateinit var adapter: PeerAdapter
     private lateinit var statusText: TextView
     private lateinit var myNameText: TextView
+    private lateinit var debugText: TextView
+    private lateinit var debugPanel: LinearLayout
     private lateinit var btnScan: Button
     private lateinit var btnOpenChat: Button
     private lateinit var btnDisconnect: Button
@@ -41,6 +46,8 @@ class MainActivity : BaseActivity() {
 
         statusText = findViewById(R.id.statusText)
         myNameText = findViewById(R.id.myNameText)
+        debugText = findViewById(R.id.debugText)
+        debugPanel = findViewById(R.id.debugPanel)
         btnScan = findViewById(R.id.btnScan)
         btnOpenChat = findViewById(R.id.btnOpenChat)
         btnDisconnect = findViewById(R.id.btnDisconnect)
@@ -54,8 +61,11 @@ class MainActivity : BaseActivity() {
         myNameText.text = "Nama kamu: $myDeviceName"
 
         adapter = PeerAdapter { device ->
-            if (isConnected) Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
-            else showConnectDialog(device)
+            if (isConnected) {
+                Toast.makeText(this, "Sudah terhubung ke $connectedPeerName", Toast.LENGTH_SHORT).show()
+            } else {
+                showConnectDialog(device)
+            }
         }
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
@@ -64,13 +74,18 @@ class MainActivity : BaseActivity() {
             onPeersChanged = { devices -> runOnUiThread { adapter.update(devices) } }
             onStatusChanged = { msg -> runOnUiThread { statusText.text = msg } }
             onConnectionInfo = { info -> runOnUiThread { handleConnectionInfo(info) } }
+            onDebugInfo = { msg -> runOnUiThread { appendDebug(msg) } }
         }
 
         if (!wifiManager.init()) statusText.text = "WiFi Direct gak didukung"
 
         btnScan.setOnClickListener {
-            if (PermissionHelper.hasAll(this)) wifiManager.discoverPeers()
-            else PermissionHelper.request(this)
+            if (PermissionHelper.hasAll(this)) {
+                wifiManager.discoverPeers()
+                debugPanel.visibility = View.VISIBLE
+            } else {
+                PermissionHelper.request(this)
+            }
         }
 
         btnOpenChat.setOnClickListener {
@@ -105,9 +120,17 @@ class MainActivity : BaseActivity() {
             btnDisconnect.visibility = Button.GONE
             btnOpenChat.visibility = Button.GONE
             statusText.text = "Terputus"
+            appendDebug("Disconnect")
         }
 
         if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
+    }
+
+    private fun appendDebug(msg: String) {
+        val current = debugText.text.toString()
+        val lines = current.split("\n").takeLast(4)
+        debugText.text = (lines + msg).joinToString("\n")
+        debugPanel.visibility = View.VISIBLE
     }
 
     private fun toggleDarkMode() {
@@ -162,8 +185,14 @@ class MainActivity : BaseActivity() {
     private fun showConnectDialog(device: WifiP2pDevice) {
         AlertDialog.Builder(this)
             .setTitle("Hubungkan?")
-            .setMessage("Connect ke ${device.deviceName ?: "perangkat"} ?")
-            .setPositiveButton("Hubungkan") { _, _ -> wifiManager.connect(device) }
+            .setMessage("Connect ke ${device.deviceName ?: "perangkat"}?\n\nHP kamu bakal jadi CLIENT (bukan server)")
+            .setPositiveButton("Hubungkan sebagai Client") { _, _ ->
+                // Force client biar gak dua-duanya jadi GO
+                wifiManager.connect(device, forceClient = true)
+            }
+            .setNeutralButton("Auto") { _, _ ->
+                wifiManager.connect(device, forceClient = false)
+            }
             .setNegativeButton("Batal", null)
             .show()
     }
@@ -172,17 +201,20 @@ class MainActivity : BaseActivity() {
         if (info.groupFormed) {
             isConnected = true
             isGroupOwner = info.isGroupOwner
-            val role = if (isGroupOwner) "Group Owner (Server)" else "Client"
-            statusText.text = "Terhubung sebagai $role\nIP: ${info.groupOwnerAddress?.hostAddress}"
+            val role = if (isGroupOwner) "SERVER (GO)" else "CLIENT"
+            val ip = info.groupOwnerAddress?.hostAddress ?: "?"
+            statusText.text = "✅ Terhubung sebagai $role\nServer IP: $ip"
             connectedPeerName = if (isGroupOwner) "Client" else "Server"
             btnDisconnect.visibility = Button.VISIBLE
             btnOpenChat.visibility = Button.VISIBLE
+            appendDebug("Connected: $role | IP: $ip")
         } else {
             isConnected = false
             connectedPeerName = null
             btnDisconnect.visibility = Button.GONE
             btnOpenChat.visibility = Button.GONE
             statusText.text = "Belum terhubung"
+            appendDebug("Disconnected")
         }
     }
 
@@ -196,7 +228,7 @@ class MainActivity : BaseActivity() {
         if (requestCode == PermissionHelper.REQ_CODE) {
             val ok = grantResults.isNotEmpty() &&
                 grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            statusText.text = if (ok) "Izin OK" else "Izin ditolak"
+            statusText.text = if (ok) "Izin OK, tap Cari" else "Izin ditolak"
         }
     }
 }
