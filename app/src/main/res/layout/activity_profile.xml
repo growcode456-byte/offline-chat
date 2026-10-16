@@ -45,13 +45,15 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Avatar bulat pakai CardView -->
+            <!-- Avatar + kamera overlap -->
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="10dp"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="24dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp">
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="140dp"
@@ -69,19 +71,20 @@
                         android:contentDescription="Avatar" />
                 </androidx.cardview.widget.CardView>
 
+                <!-- Kamera overlap di pojok kanan bawah avatar -->
                 <ImageButton
                     android:id="@+id/btnPickAvatar"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="bottom|end"
-                    android:background="@drawable/send_button_bg"
+                    android:background="@drawable/camera_button_bg"
                     android:src="@android:drawable/ic_menu_camera"
                     android:tint="#FFFFFF"
-                    android:padding="8dp"
+                    android:padding="10dp"
+                    android:elevation="6dp"
                     android:contentDescription="Ganti foto" />
             </FrameLayout>
 
-            <!-- Nama -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -121,7 +124,6 @@
                     android:maxLength="30" />
             </LinearLayout>
 
-            <!-- Status -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
