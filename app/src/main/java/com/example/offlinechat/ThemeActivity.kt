@@ -1,6 +1,5 @@
 package com.example.offlinechat
 
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
