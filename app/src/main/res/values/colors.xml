@@ -12,4 +12,6 @@
     <color name="home_bg">#F0F2F5</color>
     <color name="divider_bg">#E1F3FB</color>
     <color name="divider_text">#5B7A8C</color>
+    <color name="search_bg">#0E3B34</color>
+    <color name="search_hint">#B8C5C9</color>
 </resources>

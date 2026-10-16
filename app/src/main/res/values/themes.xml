@@ -6,14 +6,8 @@
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSecondary">@color/brand_accent</item>
         <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:windowAnimationStyle">@style/WindowAnim</item>
-    </style>
-
-    <style name="WindowAnim" parent="@android:style/Animation.Activity">
-        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
-        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
-        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
-        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+        <item name="android:statusBarColor">@color/brand_green</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/brand_green</item>
     </style>
 </resources>
