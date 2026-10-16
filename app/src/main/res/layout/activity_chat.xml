@@ -85,7 +85,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_emoticons"
+                android:src="@drawable/ic_emoji"
                 android:tint="#8696A0"
                 android:scaleType="centerInside"
                 android:contentDescription="Emoji" />
