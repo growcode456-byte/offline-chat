@@ -9,7 +9,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -75,19 +74,30 @@ class MainActivity : BaseActivity() {
 
     private fun showChatTab() {
         currentTab = 0
+
+        // HAPUS fragment yang ada di container
+        val existing = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        if (existing != null) {
+            supportFragmentManager.beginTransaction()
+                .remove(existing)
+                .commit()
+        }
+
         chatList.visibility = View.VISIBLE
         searchInput.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
-        emptyText.visibility = View.VISIBLE
+
         loadChats()
     }
 
     private fun showFragment(fragment: Fragment) {
         currentTab = 1
+
         chatList.visibility = View.GONE
         searchInput.visibility = View.GONE
         emptyText.visibility = View.GONE
         statusText.visibility = View.GONE
+
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
@@ -142,7 +152,7 @@ class MainActivity : BaseActivity() {
         if (filtered.isEmpty()) {
             emptyText.visibility = View.VISIBLE
             emptyText.text = if (allChats.isEmpty())
-                "Belum ada chat.\nBuka Setting → Test Chat untuk mulai."
+                "Belum ada chat.\nBuka Setting -> Test Chat untuk mulai."
             else "Chat gak ditemukan"
         } else {
             emptyText.visibility = View.GONE
