@@ -42,7 +42,6 @@ class ChatActivity : BaseActivity() {
     private lateinit var list: RecyclerView
     private val handler = Handler(Looper.getMainLooper())
 
-    // Data bot grup
     private val groupBots = listOf(
         Bot("Budi", Color.parseColor("#E57373"),
             listOf("Wkwk", "Iya bener", "Hahaha", "Nice!", "Setuju 👍")),
@@ -158,7 +157,6 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun simulateGroupReplies(userText: String) {
-        // Random: 1-3 bot yang bales
         val repliers = groupBots.shuffled().take(Random.nextInt(1, groupBots.size + 1))
         var delay = 600L
 
@@ -167,7 +165,6 @@ class ChatActivity : BaseActivity() {
                 val reply = when {
                     userText.contains("halo", ignoreCase = true) -> "Halo juga! 👋"
                     userText.contains("apa kabar", ignoreCase = true) -> "Baik dong!"
-                    userText.length < 5 -> bot.replies.random()
                     else -> bot.replies.random()
                 }
                 val echo = ChatMessage(
@@ -185,47 +182,102 @@ class ChatActivity : BaseActivity() {
     private fun handleImagePicked(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val base64
-cd /workspaces/offline-chat
+                val base64 = withContext(Dispatchers.IO) {
+                    val input: InputStream = contentResolver.openInputStream(uri)
+                        ?: return@withContext null
+                    val original = BitmapFactory.decodeStream(input)
+                    input.close()
+                    if (original == null) return@withContext null
 
-# 1. Update ChatMessage - tambah senderName untuk grup
-cat > app/src/main/java/com/example/offlinechat/MessageProtocol.kt <<'EOF'
-package com.example.offlinechat
+                    val maxSize = 800
+                    val bmp = if (original.width > maxSize || original.height > maxSize) {
+                        val ratio = original.width.toFloat() / original.height.toFloat()
+                        val newW: Int
+                        val newH: Int
+                        if (ratio > 1) {
+                            newW = maxSize
+                            newH = (maxSize / ratio).toInt()
+                        } else {
+                            newH = maxSize
+                            newW = (maxSize * ratio).toInt()
+                        }
+                        Bitmap.createScaledBitmap(original, newW, newH, true)
+                    } else original
 
-import org.json.JSONObject
+                    val baos = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 70, baos)
+                    Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                }
 
-data class ChatMessage(
-    val from: String,
-    val text: String,
-    val timestamp: Long,
-    val isMine: Boolean = false,
-    val imageData: String? = null,
-    val senderColor: Int? = null  // untuk grup: warna nama pengirim
-) {
-    fun toJson(): String {
-        val o = JSONObject()
-        o.put("from", from)
-        o.put("text", text)
-        o.put("ts", timestamp)
-        if (imageData != null) o.put("img", imageData)
-        if (senderColor != null) o.put("color", senderColor)
-        return o.toString()
-    }
+                if (base64 == null) {
+                    Toast.makeText(this@ChatActivity, "Gagal baca gambar", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
 
-    companion object {
-        fun fromJson(s: String): ChatMessage? {
-            return try {
-                val o = JSONObject(s)
-                ChatMessage(
-                    from = o.getString("from"),
-                    text = o.getString("text"),
-                    timestamp = o.getLong("ts"),
-                    imageData = if (o.has("img")) o.getString("img") else null,
-                    senderColor = if (o.has("color")) o.getInt("color") else null
+                val msg = ChatMessage(
+                    from = myName,
+                    text = "",
+                    timestamp = System.currentTimeMillis(),
+                    isMine = true,
+                    imageData = base64
                 )
+                addAndSave(msg)
+
+                when (mode) {
+                    "group" -> handler.postDelayed({
+                        val bot = groupBots.random()
+                        val echo = ChatMessage(
+                            from = bot.name,
+                            text = "Gambar keren! 📷",
+                            timestamp = System.currentTimeMillis(),
+                            senderColor = bot.color
+                        )
+                        addAndSave(echo)
+                    }, 800)
+                    "loopback" -> handler.postDelayed({
+                        val echo = ChatMessage("Echo Bot", "Gambar diterima! 📷",
+                            System.currentTimeMillis())
+                        addAndSave(echo)
+                    }, 800)
+                    else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
+                }
             } catch (e: Exception) {
-                null
+                Toast.makeText(this@ChatActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun addAndSave(msg: ChatMessage) {
+        adapter.addMessage(msg)
+        list.smoothScrollToPosition(adapter.itemCount - 1)
+        lifecycleScope.launch {
+            db.messageDao().insert(msg.toEntity(chatId))
+        }
+    }
+
+    private fun startTcpServer() {
+        tcpServer = ChatServer(
+            port = 8888,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
+        )
+        tcpServer?.start()
+    }
+
+    private fun startTcpClient() {
+        tcpClient = ChatClient(
+            serverIp = "192.168.49.1",
+            port = 8888,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
+        )
+        tcpClient?.connect()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+        tcpServer?.stop()
+        tcpClient?.stop()
     }
 }
