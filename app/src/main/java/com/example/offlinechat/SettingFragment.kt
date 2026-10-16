@@ -42,6 +42,10 @@ class SettingFragment : Fragment() {
         }
         view.findViewById<View>(R.id.rowDarkMode).setOnClickListener { toggleDarkMode() }
 
+        view.findViewById<View>(R.id.rowWallpaper).setOnClickListener {
+            startActivity(Intent(requireContext(), WallpaperActivity::class.java))
+        }
+
         view.findViewById<View>(R.id.rowTestChat).setOnClickListener {
             startActivity(Intent(requireContext(), ChatActivity::class.java).apply {
                 putExtra("loopback", true)

@@ -3,6 +3,9 @@ package com.example.offlinechat
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.BitmapFactory
+import android.util.Base64
+import android.widget.ImageView
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -93,6 +96,8 @@ class ChatActivity : BaseActivity() {
             else -> "chat_$wfdPeer"
         }
 
+        applyWallpaper()
+
         statusText = findViewById(R.id.chatStatus)
         list = findViewById(R.id.messageList)
         input = findViewById(R.id.messageInput)
@@ -177,6 +182,24 @@ class ChatActivity : BaseActivity() {
                 .setNegativeButton("Batal", null)
                 .show()
             true
+        }
+    }
+
+    private fun applyWallpaper() {
+        val root = findViewById<android.widget.LinearLayout>(android.R.id.content)
+        if (root == null || root.childCount == 0) return
+        val parent = root.getChildAt(0) as? android.widget.LinearLayout ?: return
+
+        val wp = PrefsHelper.getWallpaper(this)
+        if (wp != null) {
+            try {
+                val bytes = Base64.decode(wp, Base64.DEFAULT)
+                val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bmp != null) {
+                    val drawable = android.graphics.drawable.BitmapDrawable(resources, bmp)
+                    parent.background = drawable
+                }
+            } catch (e: Exception) {}
         }
     }
 
