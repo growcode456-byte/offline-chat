@@ -8,14 +8,15 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class MainActivity : BaseActivity() {
 
@@ -24,7 +25,6 @@ class MainActivity : BaseActivity() {
     private lateinit var emptyText: TextView
     private lateinit var statusText: TextView
     private lateinit var btnDarkMode: ImageButton
-    private lateinit var fabNewChat: FloatingActionButton
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var searchInput: EditText
 
@@ -39,7 +39,6 @@ class MainActivity : BaseActivity() {
         emptyText = findViewById(R.id.emptyText)
         statusText = findViewById(R.id.statusText)
         btnDarkMode = findViewById(R.id.btnDarkMode)
-        fabNewChat = findViewById(R.id.fabNewChat)
         bottomNav = findViewById(R.id.bottomNav)
         searchInput = findViewById(R.id.searchInput)
 
@@ -48,11 +47,10 @@ class MainActivity : BaseActivity() {
         chatList.adapter = chatAdapter
 
         btnDarkMode.setOnClickListener { toggleDarkMode() }
-        fabNewChat.setOnClickListener { showNewChatDialog() }
         searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {
-                filterChats(s?.toString() ?: "")
+                applyFilter(s?.toString() ?: "")
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -78,8 +76,8 @@ class MainActivity : BaseActivity() {
         currentTab = 0
         chatList.visibility = View.VISIBLE
         searchInput.visibility = View.VISIBLE
-        fabNewChat.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
+        emptyText.visibility = View.VISIBLE
         loadChats()
     }
 
@@ -87,7 +85,6 @@ class MainActivity : BaseActivity() {
         currentTab = 1
         chatList.visibility = View.GONE
         searchInput.visibility = View.GONE
-        fabNewChat.visibility = View.GONE
         emptyText.visibility = View.GONE
         statusText.visibility = View.GONE
         supportFragmentManager.beginTransaction()
@@ -99,10 +96,8 @@ class MainActivity : BaseActivity() {
         val db = AppDatabase.get(this)
         lifecycleScope.launch {
             try {
-                val prefs = PrefsHelper.getName(this@MainActivity)
                 val list = mutableListOf<ChatPreview>()
 
-                // Loopback chat
                 val loopback = db.messageDao().getLastMessage("loopback")
                 if (loopback != null) {
                     list.add(ChatPreview(
@@ -115,7 +110,6 @@ class MainActivity : BaseActivity() {
                     ))
                 }
 
-                // Group chat
                 val group = db.messageDao().getLastMessage("group_sim")
                 if (group != null) {
                     list.add(ChatPreview(
@@ -136,10 +130,6 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun filterChats(query: String) {
-        applyFilter(query)
-    }
-
     private fun applyFilter(query: String = searchInput.text.toString()) {
         val filtered = if (query.isBlank()) allChats
         else allChats.filter {
@@ -151,7 +141,7 @@ class MainActivity : BaseActivity() {
         if (filtered.isEmpty()) {
             emptyText.visibility = View.VISIBLE
             emptyText.text = if (allChats.isEmpty())
-                "Belum ada chat.\nTap tombol + untuk mulai."
+                "Belum ada chat.\nBuka Setting → Test Chat untuk mulai."
             else "Chat gak ditemukan"
         } else {
             emptyText.visibility = View.GONE
@@ -159,39 +149,13 @@ class MainActivity : BaseActivity() {
     }
 
     private fun openChat(preview: ChatPreview) {
-        startActivity(Intent(this, ChatActivity::class.java).apply {
-            putExtra("myName", PrefsHelper.getName(this@MainActivity))
-            when (preview.chatId) {
-                "loopback" -> putExtra("loopback", true)
-                "group_sim" -> putExtra("group", true)
-            }
-        })
-    }
-
-    private fun showNewChatDialog() {
-        val options = arrayOf(
-            "Test Chat (1 HP)",
-            "Test Grup (3 Bot)",
-            "Cari Perangkat (WiFi Direct)"
-        )
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Mulai Chat Baru")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> startActivity(Intent(this, ChatActivity::class.java).apply {
-                        putExtra("loopback", true)
-                        putExtra("myName", PrefsHelper.getName(this))
-                    })
-                    1 -> startActivity(Intent(this, ChatActivity::class.java).apply {
-                        putExtra("group", true)
-                        putExtra("myName", PrefsHelper.getName(this))
-                    })
-                    2 -> {
-                        bottomNav.selectedItemId = R.id.nav_perangkat
-                    }
-                }
-            }
-            .show()
+        val intent = Intent(this@MainActivity, ChatActivity::class.java)
+        intent.putExtra("myName", PrefsHelper.getName(this@MainActivity))
+        when (preview.chatId) {
+            "loopback" -> intent.putExtra("loopback", true)
+            "group_sim" -> intent.putExtra("group", true)
+        }
+        startActivity(intent)
     }
 
     private fun toggleDarkMode() {
@@ -199,14 +163,11 @@ class MainActivity : BaseActivity() {
         val next = when (current) { -1 -> 0; 0 -> 1; else -> -1 }
         PrefsHelper.setDarkMode(this, next)
         val label = when (next) { -1 -> "Ikut Sistem"; 0 -> "Mode Terang"; else -> "Mode Gelap" }
-        android.widget.Toast.makeText(this, label, android.widget.Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, label, Toast.LENGTH_SHORT).show()
         when (next) {
-            -1 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            0 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
-            1 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
+            -1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         }
         recreate()
     }
