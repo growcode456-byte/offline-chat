@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark mode -->
     <color name="brand_green">#1F2C33</color>
     <color name="brand_green_light">#2A3942</color>
     <color name="brand_accent">#00A884</color>
@@ -11,4 +10,6 @@
     <color name="text_secondary">#8696A0</color>
     <color name="input_bg">#2A3942</color>
     <color name="home_bg">#0B141A</color>
+    <color name="divider_bg">#182229</color>
+    <color name="divider_text">#8696A0</color>
 </resources>

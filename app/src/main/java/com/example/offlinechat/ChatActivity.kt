@@ -60,7 +60,7 @@ class ChatActivity : BaseActivity() {
             db.messageDao().getMessages(chatId).collect { entities ->
                 val msgs = entities.map { it.toChatMessage() }
                 adapter.setMessages(msgs)
-                if (msgs.isNotEmpty()) list.scrollToPosition(msgs.size - 1)
+                if (msgs.isNotEmpty()) list.scrollToPosition(adapter.itemCount - 1)
             }
         }
 
@@ -109,7 +109,7 @@ class ChatActivity : BaseActivity() {
 
     private fun addAndSave(msg: ChatMessage) {
         adapter.addMessage(msg)
-        list.scrollToPosition(adapter.itemCount - 1)
+        list.smoothScrollToPosition(adapter.itemCount - 1)
         lifecycleScope.launch {
             db.messageDao().insert(msg.toEntity(chatId))
         }

@@ -23,7 +23,8 @@
             android:text="Nama perangkat"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            android:textColor="@color/text_primary"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:id="@+id/peerInfo"

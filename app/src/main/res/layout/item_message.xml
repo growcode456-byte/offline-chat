@@ -25,7 +25,8 @@
             android:text="pesan"
             android:textColor="@color/text_primary"
             android:textSize="15sp"
-            android:lineSpacingExtra="2dp" />
+            android:lineSpacingExtra="2dp"
+            android:fontFamily="sans-serif" />
 
         <TextView
             android:id="@+id/messageTime"
