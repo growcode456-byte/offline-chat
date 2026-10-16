@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Base64
 import android.view.View
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +20,8 @@ import java.io.InputStream
 class WallpaperActivity : BaseActivity() {
 
     private lateinit var previewImage: ImageView
+    private lateinit var overlayDim: View
+    private lateinit var brightnessSeek: SeekBar
 
     private val pickWallpaper = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -29,8 +32,22 @@ class WallpaperActivity : BaseActivity() {
         setContentView(R.layout.activity_wallpaper)
 
         previewImage = findViewById(R.id.wallpaperPreview)
+        overlayDim = findViewById(R.id.overlayDim)
+        brightnessSeek = findViewById(R.id.brightnessSeek)
 
-        // Pakai View generic, biar gak masalah MaterialButton vs ImageButton
+        // Load brightness existing
+        val brightness = PrefsHelper.getWpBrightness(this)
+        brightnessSeek.progress = brightness
+        applyBrightness(brightness)
+
+        brightnessSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                applyBrightness(progress)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<View>(R.id.btnPickWallpaper).setOnClickListener {
             pickWallpaper.launch("image/*")
@@ -41,6 +58,7 @@ class WallpaperActivity : BaseActivity() {
             previewImage.setImageResource(R.drawable.wallpaper_default)
         }
         findViewById<View>(R.id.btnSaveWallpaper).setOnClickListener {
+            PrefsHelper.setWpBrightness(this, brightnessSeek.progress)
             Toast.makeText(this, "Wallpaper tersimpan!", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -48,6 +66,13 @@ class WallpaperActivity : BaseActivity() {
         val existing = PrefsHelper.getWallpaper(this)
         if (existing != null) applyWallpaper(existing)
         else previewImage.setImageResource(R.drawable.wallpaper_default)
+    }
+
+    private fun applyBrightness(progress: Int) {
+        // progress 0..100
+        // 0 = terang, 100 = gelap
+        val alpha = (progress * 2.55).toInt().coerceIn(0, 255)
+        overlayDim.setBackgroundColor((alpha shl 24) or 0x000000)
     }
 
     private fun loadWallpaper(uri: Uri) {
@@ -79,7 +104,7 @@ class WallpaperActivity : BaseActivity() {
 
                 PrefsHelper.setWallpaper(this@WallpaperActivity, base64)
                 applyWallpaper(base64)
-                Toast.makeText(this@WallpaperActivity, "Wallpaper dipilih, tap Simpan", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@WallpaperActivity, "Wallpaper dipilih, atur brightness + Simpan", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@WallpaperActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }

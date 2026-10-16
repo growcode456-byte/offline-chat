@@ -10,6 +10,7 @@ object PrefsHelper {
     private const val KEY_AVATAR = "avatar_base64"
     private const val KEY_WALLPAPER = "chat_wallpaper"
     private const val KEY_THEME = "chat_theme"
+    private const val KEY_WP_BRIGHTNESS = "wp_brightness"
 
     fun getDarkMode(context: Context): Int =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_DARK_MODE, -1)
@@ -62,5 +63,15 @@ object PrefsHelper {
     fun setTheme(context: Context, theme: String) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putString(KEY_THEME, theme).apply()
+    }
+
+    // Brightness 0..100, default 50 (agak gelap)
+    fun getWpBrightness(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_WP_BRIGHTNESS, 50)
+
+    fun setWpBrightness(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putInt(KEY_WP_BRIGHTNESS, value).apply()
     }
 }

@@ -179,13 +179,26 @@ class ChatActivity : BaseActivity() {
         try {
             val bytes = Base64.decode(wp, Base64.DEFAULT)
             val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return
+
+            // Bikin drawable dengan overlay gelap
+            val brightness = PrefsHelper.getWpBrightness(this)
+            val alpha = (brightness * 2.55).toInt().coerceIn(0, 255)
+
+            val drawable = BitmapDrawable(resources, bmp)
+            val overlay = android.graphics.drawable.ColorDrawable(
+                (alpha shl 24) or 0x000000
+            )
+            val layer = android.graphics.drawable.LayerDrawable(
+                arrayOf(drawable, overlay)
+            )
+
             val root = findViewById<View>(android.R.id.content)
             if (root is LinearLayout) {
-                root.setBackgroundDrawable(BitmapDrawable(resources, bmp))
+                root.background = layer
             } else if (root is android.view.ViewGroup) {
                 val child = root.getChildAt(0)
                 if (child is LinearLayout) {
-                    child.background = BitmapDrawable(resources, bmp)
+                    child.background = layer
                 }
             }
         } catch (e: Exception) {}
