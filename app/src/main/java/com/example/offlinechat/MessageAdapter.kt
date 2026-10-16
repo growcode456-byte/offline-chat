@@ -2,6 +2,7 @@ package com.example.offlinechat
 
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.util.Base64
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -22,7 +23,10 @@ sealed class ChatItem {
     data class DateDivider(val label: String) : ChatItem()
 }
 
-class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageAdapter(
+    private val isGroup: Boolean = false,
+    private val context: android.content.Context? = null
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<ChatItem>()
     private val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -64,8 +68,7 @@ class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapte
 
     private fun shouldAddDivider(timestamp: Long): Boolean {
         if (items.isEmpty()) return true
-        val lastMsg = items.lastOrNull { it is ChatItem.Message } as? ChatItem.Message
-            ?: return true
+        val lastMsg = items.lastOrNull { it is ChatItem.Message } as? ChatItem.Message ?: return true
         return dateKey(lastMsg.msg.timestamp) != dateKey(timestamp)
     }
 
@@ -77,14 +80,11 @@ class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapte
     private fun formatDateLabel(ts: Long): String {
         val now = Calendar.getInstance()
         val msgCal = Calendar.getInstance().apply { timeInMillis = ts }
-
         val isToday = now.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) &&
                 now.get(Calendar.DAY_OF_YEAR) == msgCal.get(Calendar.DAY_OF_YEAR)
-
         val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
         val isYesterday = yesterday.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) &&
                 yesterday.get(Calendar.DAY_OF_YEAR) == msgCal.get(Calendar.DAY_OF_YEAR)
-
         return when {
             isToday -> "Hari Ini"
             isYesterday -> "Kemarin"
@@ -129,7 +129,6 @@ class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapte
             text.text = msg.text
             time.text = fmt.format(Date(msg.timestamp))
 
-            // Tampilkan nama pengirim kalau grup & bukan pesan sendiri
             if (isGroup && !msg.isMine && msg.from.isNotEmpty()) {
                 sender.visibility = View.VISIBLE
                 sender.text = msg.from
@@ -159,17 +158,31 @@ class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapte
 
             val params = bubble.layoutParams as LinearLayout.LayoutParams
             if (msg.isMine) {
-                bubble.setBackgroundResource(R.drawable.bubble_me)
                 params.gravity = Gravity.END
                 time.gravity = Gravity.END
             } else {
-                bubble.setBackgroundResource(R.drawable.bubble_other)
                 params.gravity = Gravity.START
                 time.gravity = Gravity.START
             }
             bubble.layoutParams = params
 
-            val anim = AnimationUtils.loadAnimation(itemView.context, android.R.anim.fade_in)
+            // Apply theme bubble colors
+            val ctx = itemView.context
+            val theme = ThemeHelper.current(ctx)
+            val bg = GradientDrawable().apply {
+                cornerRadii = floatArrayOf(
+                    16f * ctx.resources.displayMetrics.density, 16f * ctx.resources.displayMetrics.density,
+                    16f * ctx.resources.displayMetrics.density, 16f * ctx.resources.displayMetrics.density,
+                    if (msg.isMine) 4f * ctx.resources.displayMetrics.density else 16f * ctx.resources.displayMetrics.density,
+                    if (msg.isMine) 4f * ctx.resources.displayMetrics.density else 16f * ctx.resources.displayMetrics.density,
+                    if (msg.isMine) 16f * ctx.resources.displayMetrics.density else 4f * ctx.resources.displayMetrics.density,
+                    if (msg.isMine) 16f * ctx.resources.displayMetrics.density else 4f * ctx.resources.displayMetrics.density
+                )
+                setColor(if (msg.isMine) theme.bubbleMine else theme.bubbleOther)
+            }
+            bubble.background = bg
+
+            val anim = AnimationUtils.loadAnimation(ctx, android.R.anim.fade_in)
             anim.duration = 200
             itemView.startAnimation(anim)
         }

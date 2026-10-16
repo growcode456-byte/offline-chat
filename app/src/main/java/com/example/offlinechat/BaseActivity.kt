@@ -1,10 +1,7 @@
 package com.example.offlinechat
 
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
@@ -25,21 +22,12 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     private fun applyStatusBar() {
-        val isDark = PrefsHelper.getDarkMode(this) == 1
-
-        // Warna status bar
-        val color = if (isDark) Color.parseColor("#0B141A")
-                    else Color.parseColor("#FFFFFF")
-
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = color
-        window.navigationBarColor = color
-
-        // Icon status bar terang/gelap
-        val lightIcons = !isDark
+        val theme = ThemeHelper.current(this)
+        window.statusBarColor = theme.headerColor
+        window.navigationBarColor = theme.headerColor
         WindowCompat.getInsetsController(window, window.decorView).apply {
-            isAppearanceLightStatusBars = lightIcons
-            isAppearanceLightNavigationBars = lightIcons
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
         }
     }
 }

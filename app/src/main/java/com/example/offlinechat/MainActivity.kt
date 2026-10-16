@@ -34,6 +34,8 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        applyTheme()
+
         chatList = findViewById(R.id.chatList)
         emptyText = findViewById(R.id.emptyText)
         statusText = findViewById(R.id.statusText)
@@ -68,6 +70,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        applyTheme()
         statusText.text = PrefsHelper.getStatus(this)
         if (currentTab == 0) loadChats()
     }
@@ -167,6 +170,14 @@ class MainActivity : BaseActivity() {
             "group_sim" -> intent.putExtra("group", true)
         }
         startActivity(intent)
+    }
+
+    private fun applyTheme() {
+        val theme = ThemeHelper.current(this)
+        val header = findViewById<android.view.View>(R.id.mainHeader)
+        header?.setBackgroundColor(theme.headerColor)
+        window.statusBarColor = theme.headerColor
+        window.navigationBarColor = theme.headerColor
     }
 
     private fun toggleDarkMode() {
