@@ -2,11 +2,9 @@ package com.example.offlinechat
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -18,6 +16,7 @@ import kotlinx.coroutines.launch
 class SettingFragment : Fragment() {
 
     private lateinit var settingName: TextView
+    private lateinit var settingStatus: TextView
     private lateinit var darkModeValue: TextView
 
     override fun onCreateView(
@@ -27,13 +26,15 @@ class SettingFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         settingName = view.findViewById(R.id.settingName)
+        settingStatus = view.findViewById(R.id.settingStatus)
         darkModeValue = view.findViewById(R.id.darkModeValue)
 
-        settingName.text = PrefsHelper.getName(requireContext())
-        updateDarkLabel()
-
-        view.findViewById<View>(R.id.cardName).setOnClickListener { showNameDialog() }
+        view.findViewById<View>(R.id.cardName).setOnClickListener {
+            startActivity(Intent(requireContext(), ProfileActivity::class.java))
+        }
         view.findViewById<View>(R.id.rowDarkMode).setOnClickListener { toggleDarkMode() }
 
         view.findViewById<View>(R.id.rowTestChat).setOnClickListener {
@@ -51,8 +52,14 @@ class SettingFragment : Fragment() {
         }
 
         view.findViewById<View>(R.id.rowClearAll).setOnClickListener { confirmClearAll() }
-
         view.findViewById<View>(R.id.rowAbout).setOnClickListener { showAbout() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        settingName.text = PrefsHelper.getName(requireContext())
+        settingStatus.text = PrefsHelper.getStatus(requireContext())
+        updateDarkLabel()
     }
 
     private fun updateDarkLabel() {
@@ -65,11 +72,7 @@ class SettingFragment : Fragment() {
 
     private fun toggleDarkMode() {
         val current = PrefsHelper.getDarkMode(requireContext())
-        val next = when (current) {
-            -1 -> 0
-            0 -> 1
-            else -> -1
-        }
+        val next = when (current) { -1 -> 0; 0 -> 1; else -> -1 }
         PrefsHelper.setDarkMode(requireContext(), next)
 
         when (next) {
@@ -79,37 +82,10 @@ class SettingFragment : Fragment() {
         }
 
         val label = when (next) {
-            -1 -> "Ikut Sistem"
-            0 -> "Mode Terang"
-            else -> "Mode Gelap"
+            -1 -> "Ikut Sistem"; 0 -> "Mode Terang"; else -> "Mode Gelap"
         }
         Toast.makeText(requireContext(), label, Toast.LENGTH_SHORT).show()
         updateDarkLabel()
-    }
-
-    private fun showNameDialog() {
-        val input = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            setText(PrefsHelper.getName(requireContext()))
-            setSelection(text.length)
-            setPadding(40, 30, 40, 30)
-        }
-        AlertDialog.Builder(requireContext())
-            .setTitle("Nama Tampilan")
-            .setMessage("Nama ini muncul saat orang lain menemukan HP kamu")
-            .setView(input)
-            .setPositiveButton("Simpan") { _, _ ->
-                val newName = input.text.toString().trim()
-                if (newName.isEmpty()) {
-                    Toast.makeText(requireContext(), "Gak boleh kosong", Toast.LENGTH_SHORT).show()
-                } else {
-                    PrefsHelper.setName(requireContext(), newName)
-                    settingName.text = newName
-                    Toast.makeText(requireContext(), "Tersimpan!", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 
     private fun confirmClearAll() {
@@ -137,7 +113,7 @@ class SettingFragment : Fragment() {
             .setMessage(
                 "Offline Chat • Tanpa Internet\n\n" +
                 "Versi 1.0\n\n" +
-                "Chat via WiFi Direct, Hotspot, atau Bluetooth — tanpa butuh internet sama sekali.\n\n" +
+                "Chat via WiFi Direct, Hotspot, atau Bluetooth — tanpa butuh internet.\n\n" +
                 "Dibuat dengan ❤ dari HP doang"
             )
             .setPositiveButton("OK", null)

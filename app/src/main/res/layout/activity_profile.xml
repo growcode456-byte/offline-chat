@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/home_bg">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bubble_other"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:gravity="center_vertical"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="@color/text_primary"
+            android:contentDescription="Kembali" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Profil"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:paddingStart="8dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Avatar -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="24dp">
+
+                <ImageView
+                    android:id="@+id/profileAvatar"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:background="@drawable/send_button_bg"
+                    android:padding="8dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/splash_logo"
+                    android:contentDescription="Avatar" />
+
+                <ImageButton
+                    android:id="@+id/btnPickAvatar"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@drawable/send_button_bg"
+                    android:src="@android:drawable/ic_menu_camera"
+                    android:tint="#FFFFFF"
+                    android:padding="8dp"
+                    android:contentDescription="Ganti foto" />
+            </FrameLayout>
+
+            <!-- Nama -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="NAMA"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_accent"
+                android:paddingBottom="6dp"
+                android:paddingStart="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bubble_other"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_myplaces"
+                    android:tint="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/inputName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Nama kamu"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:paddingStart="16dp"
+                    android:inputType="textPersonName"
+                    android:maxLength="30" />
+            </LinearLayout>
+
+            <!-- Status -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="STATUS"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_accent"
+                android:paddingTop="18dp"
+                android:paddingBottom="6dp"
+                android:paddingStart="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bubble_other"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_info_details"
+                    android:tint="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/inputStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="Status"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:paddingStart="16dp"
+                    android:inputType="text"
+                    android:maxLength="60" />
+            </LinearLayout>
+
+            <!-- Quick status -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Pilih cepat:"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:paddingTop="12dp"
+                android:paddingBottom="8dp"
+                android:paddingStart="4dp" />
+
+            <com.google.android.material.chip.ChipGroup
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/chipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:singleLine="false"
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="6dp" />
+
+            <!-- Save button -->
+            <Button
+                android:id="@+id/btnSaveProfile"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="30dp"
+                android:text="Simpan"
+                android:textSize="15sp"
+                android:backgroundTint="@color/brand_accent"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

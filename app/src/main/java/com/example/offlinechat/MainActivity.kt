@@ -69,6 +69,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        statusText.text = PrefsHelper.getStatus(this)
         if (currentTab == 0) loadChats()
     }
 
