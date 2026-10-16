@@ -10,12 +10,13 @@
         android:layout_height="wrap_content"
         android:background="@drawable/header_bg"
         android:orientation="horizontal"
-        android:padding="14dp"
+        android:padding="10dp"
+        android:gravity="center_vertical"
         android:elevation="4dp">
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:src="@drawable/splash_logo"
             android:background="@drawable/send_button_bg"
             android:padding="4dp" />
@@ -25,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingStart="12dp">
+            android:paddingStart="10dp">
 
             <TextView
                 android:id="@+id/chatTitle"
@@ -33,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:text="Chat"
                 android:textColor="#FFFFFF"
-                android:textSize="17sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -42,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:text="Menyambungkan..."
                 android:textColor="#CCFFFFFF"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -51,51 +52,93 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"
+        android:padding="6dp"
         android:clipToPadding="false" />
+
+    <include
+        android:id="@+id/emojiPanel"
+        layout="@layout/emoji_picker"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/bubble_other"
         android:orientation="horizontal"
-        android:padding="8dp"
-        android:elevation="8dp"
-        android:gravity="center_vertical">
+        android:padding="6dp"
+        android:gravity="bottom"
+        android:elevation="8dp">
 
-        <ImageButton
-            android:id="@+id/btnAttach"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:scaleType="center"
-            android:contentDescription="Lampiran"
-            android:tint="@color/text_secondary" />
-
-        <EditText
-            android:id="@+id/messageInput"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/input_bg"
-            android:hint="Ketik pesan..."
+            android:background="@drawable/wa_input_bg"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:minHeight="44dp"
-            android:maxLines="5"
-            android:textSize="15sp"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary"
-            android:paddingHorizontal="16dp" />
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/btnEmoji"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_emoticons"
+                android:tint="#8696A0"
+                android:scaleType="centerInside"
+                android:contentDescription="Emoji" />
+
+            <EditText
+                android:id="@+id/messageInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="Ketik pesan"
+                android:minHeight="40dp"
+                android:maxLines="5"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="#8696A0"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:inputType="textMultiLine|textCapSentences"
+                android:importantForAutofill="no" />
+
+            <ImageButton
+                android:id="@+id/btnAttach"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:tint="#8696A0"
+                android:scaleType="centerInside"
+                android:contentDescription="Lampiran" />
+
+            <ImageButton
+                android:id="@+id/btnCamera"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="4dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_camera"
+                android:tint="#8696A0"
+                android:scaleType="centerInside"
+                android:contentDescription="Kamera" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnSend"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:background="@drawable/send_button_bg"
             android:src="@android:drawable/ic_menu_send"
-            android:scaleType="center"
+            android:scaleType="centerInside"
             android:contentDescription="Kirim"
             android:tint="#FFFFFF" />
     </LinearLayout>
+
 </LinearLayout>

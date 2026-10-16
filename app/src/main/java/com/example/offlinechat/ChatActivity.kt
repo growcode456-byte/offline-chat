@@ -1,6 +1,5 @@
 package com.example.offlinechat
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -8,7 +7,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
@@ -16,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +43,13 @@ class ChatActivity : BaseActivity() {
 
     private lateinit var statusText: TextView
     private lateinit var list: RecyclerView
+    private lateinit var input: EditText
+    private lateinit var btnSend: ImageButton
+    private lateinit var btnEmoji: ImageButton
+    private lateinit var btnAttach: ImageButton
+    private lateinit var btnCamera: ImageButton
+    private lateinit var emojiPanel: View
+
     private val handler = Handler(Looper.getMainLooper())
 
     private val groupBots = listOf(
@@ -56,7 +66,13 @@ class ChatActivity : BaseActivity() {
     private val pickImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) handleImagePicked(uri)
+        if (uri != null) handleImagePicked(uri, fromCamera = false)
+    }
+
+    private val takePicture = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) handleImagePicked(uri, fromCamera = true)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,9 +95,12 @@ class ChatActivity : BaseActivity() {
 
         statusText = findViewById(R.id.chatStatus)
         list = findViewById(R.id.messageList)
-        val input = findViewById<EditText>(R.id.messageInput)
-        val btnSend = findViewById<ImageButton>(R.id.btnSend)
-        val btnAttach = findViewById<ImageButton>(R.id.btnAttach)
+        input = findViewById(R.id.messageInput)
+        btnSend = findViewById(R.id.btnSend)
+        btnEmoji = findViewById(R.id.btnEmoji)
+        btnAttach = findViewById(R.id.btnAttach)
+        btnCamera = findViewById(R.id.btnCamera)
+        emojiPanel = findViewById(R.id.emojiPanel)
 
         findViewById<TextView>(R.id.chatTitle).text = when {
             isGroupMode -> "Grup: Budi, Sari, Andi"
@@ -97,6 +116,8 @@ class ChatActivity : BaseActivity() {
         list.layoutManager = lm
         list.adapter = adapter
 
+        setupEmojiPanel()
+
         lifecycleScope.launch {
             db.messageDao().getMessages(chatId).collect { entities ->
                 val msgs = entities.map { it.toChatMessage() }
@@ -107,10 +128,10 @@ class ChatActivity : BaseActivity() {
 
         if (isGroupMode) {
             mode = "group"
-            statusText.text = "Grup simulasi (3 bot) • ${groupBots.size} anggota"
+            statusText.text = "Grup simulasi • ${groupBots.size} anggota"
         } else if (isLoopback) {
             mode = "loopback"
-            statusText.text = "Mode test lokal (tersimpan)"
+            statusText.text = "Mode test lokal"
         } else {
             mode = "tcp"
             isServer = wfdIsServer
@@ -118,31 +139,34 @@ class ChatActivity : BaseActivity() {
             if (isServer) startTcpServer() else startTcpClient()
         }
 
+        // Update tombol send: kalau ada text → kirim, kalau kosong → mic
+        input.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {
+                updateSendButton(s?.toString().orEmpty().isNotEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+        updateSendButton(false)
+
         btnSend.setOnClickListener {
             val text = input.text.toString().trim()
-            if (text.isEmpty()) return@setOnClickListener
-            val msg = ChatMessage(myName, text, System.currentTimeMillis(), isMine = true)
-            addAndSave(msg)
-            input.setText("")
-
-            when (mode) {
-                "group" -> simulateGroupReplies(text)
-                "loopback" -> handler.postDelayed({
-                    val echo = ChatMessage("Echo Bot", "Echo: $text", System.currentTimeMillis())
-                    addAndSave(echo)
-                }, 600)
-                else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
+            if (text.isEmpty()) {
+                Toast.makeText(this, "🎤 Voice note belum tersedia", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+            sendMessage(text)
+            input.setText("")
         }
 
-        btnAttach.setOnClickListener {
-            pickImage.launch("image/*")
-        }
+        btnEmoji.setOnClickListener { toggleEmojiPanel() }
+        btnAttach.setOnClickListener { pickImage.launch("image/*") }
+        btnCamera.setOnClickListener { takePicture.launch("image/*") }
 
         findViewById<TextView>(R.id.chatTitle).setOnLongClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Hapus Riwayat?")
-                .setMessage("Semua chat di grup ini bakal dihapus.")
+                .setMessage("Semua chat di sini bakal dihapus.")
                 .setPositiveButton("Hapus") { _, _ ->
                     lifecycleScope.launch {
                         db.messageDao().clearChat(chatId)
@@ -153,6 +177,51 @@ class ChatActivity : BaseActivity() {
                 .setNegativeButton("Batal", null)
                 .show()
             true
+        }
+    }
+
+    private fun updateSendButton(hasText: Boolean) {
+        btnSend.setImageResource(
+            if (hasText) android.R.drawable.ic_menu_send
+            else android.R.drawable.ic_btn_speak_now
+        )
+    }
+
+    private fun toggleEmojiPanel() {
+        if (emojiPanel.visibility == View.VISIBLE) {
+            emojiPanel.visibility = View.GONE
+        } else {
+            emojiPanel.visibility = View.VISIBLE
+        }
+    }
+
+    private fun setupEmojiPanel() {
+        val grid = emojiPanel.findViewById<RecyclerView>(R.id.emojiGrid)
+        grid.layoutManager = GridLayoutManager(this, 8)
+        grid.adapter = EmojiAdapter(EmojiPicker.ALL) { emoji ->
+            val cur = input.text.toString()
+            val sel = input.selectionStart
+            val newText = cur.substring(0, sel) + emoji + cur.substring(sel)
+            input.setText(newText)
+            input.setSelection(sel + emoji.length)
+        }
+        emojiPanel.findViewById<View>(R.id.btnCloseEmoji).setOnClickListener {
+            emojiPanel.visibility = View.GONE
+        }
+        emojiPanel.visibility = View.GONE
+    }
+
+    private fun sendMessage(text: String) {
+        val msg = ChatMessage(myName, text, System.currentTimeMillis(), isMine = true)
+        addAndSave(msg)
+
+        when (mode) {
+            "group" -> simulateGroupReplies(text)
+            "loopback" -> handler.postDelayed({
+                val echo = ChatMessage("Echo Bot", "Echo: $text", System.currentTimeMillis())
+                addAndSave(echo)
+            }, 600)
+            else -> if (isServer) tcpServer?.send(msg) else tcpClient?.send(msg)
         }
     }
 
@@ -179,14 +248,14 @@ class ChatActivity : BaseActivity() {
         }
     }
 
-    private fun handleImagePicked(uri: Uri) {
+    private fun handleImagePicked(uri: Uri, fromCamera: Boolean) {
         lifecycleScope.launch {
             try {
                 val base64 = withContext(Dispatchers.IO) {
-                    val input: InputStream = contentResolver.openInputStream(uri)
+                    val inputStream: InputStream = contentResolver.openInputStream(uri)
                         ?: return@withContext null
-                    val original = BitmapFactory.decodeStream(input)
-                    input.close()
+                    val original = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
                     if (original == null) return@withContext null
 
                     val maxSize = 800
