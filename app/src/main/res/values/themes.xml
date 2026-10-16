@@ -6,8 +6,11 @@
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSecondary">@color/brand_accent</item>
         <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="android:statusBarColor">@color/brand_green</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/brand_green</item>
+
+        <!-- Status bar PUTIH di light mode + icon gelap -->
+        <item name="android:statusBarColor">@color/bubble_other</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/bubble_other</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

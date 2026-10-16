@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.OfflineChat" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_green</item>
+        <item name="colorPrimaryVariant">@color/brand_green_light</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+
+        <!-- Status bar HITAM di dark mode + icon terang -->
+        <item name="android:statusBarColor">@color/bubble_other</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/bubble_other</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>
