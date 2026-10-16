@@ -1,6 +1,7 @@
 package com.example.offlinechat
 
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.Base64
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -21,7 +22,7 @@ sealed class ChatItem {
     data class DateDivider(val label: String) : ChatItem()
 }
 
-class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageAdapter(private val isGroup: Boolean = false) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<ChatItem>()
     private val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -122,10 +123,20 @@ class MessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         val text: TextView = v.findViewById(R.id.messageText)
         val time: TextView = v.findViewById(R.id.messageTime)
         val image: ImageView = v.findViewById(R.id.messageImage)
+        val sender: TextView = v.findViewById(R.id.senderName)
 
         fun bind(msg: ChatMessage) {
             text.text = msg.text
             time.text = fmt.format(Date(msg.timestamp))
+
+            // Tampilkan nama pengirim kalau grup & bukan pesan sendiri
+            if (isGroup && !msg.isMine && msg.from.isNotEmpty()) {
+                sender.visibility = View.VISIBLE
+                sender.text = msg.from
+                sender.setTextColor(msg.senderColor ?: Color.parseColor("#00A884"))
+            } else {
+                sender.visibility = View.GONE
+            }
 
             if (msg.imageData != null) {
                 try {

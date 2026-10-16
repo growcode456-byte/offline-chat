@@ -26,6 +26,7 @@ class MainActivity : BaseActivity() {
     private lateinit var btnOpenChat: Button
     private lateinit var btnDisconnect: Button
     private lateinit var btnTestChat: Button
+    private lateinit var btnGroupChat: Button
     private lateinit var btnSettings: ImageButton
     private lateinit var btnDarkMode: ImageButton
 
@@ -44,13 +45,13 @@ class MainActivity : BaseActivity() {
         btnOpenChat = findViewById(R.id.btnOpenChat)
         btnDisconnect = findViewById(R.id.btnDisconnect)
         btnTestChat = findViewById(R.id.btnTestChat)
+        btnGroupChat = findViewById(R.id.btnGroupChat)
         btnSettings = findViewById(R.id.btnSettings)
         btnDarkMode = findViewById(R.id.btnDarkMode)
         val list = findViewById<RecyclerView>(R.id.peerList)
 
         myDeviceName = PrefsHelper.getName(this)
         myNameText.text = "Nama kamu: $myDeviceName"
-        updateDarkIcon()
 
         adapter = PeerAdapter { device ->
             if (isConnected) Toast.makeText(this, "Sudah terhubung!", Toast.LENGTH_SHORT).show()
@@ -73,17 +74,23 @@ class MainActivity : BaseActivity() {
         }
 
         btnOpenChat.setOnClickListener {
-            val intent = Intent(this, ChatActivity::class.java).apply {
+            startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("isGroupOwner", isGroupOwner)
                 putExtra("myName", myDeviceName)
                 putExtra("peerName", connectedPeerName ?: "Peer")
-            }
-            startActivity(intent)
+            })
         }
 
         btnTestChat.setOnClickListener {
             startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("loopback", true)
+                putExtra("myName", myDeviceName)
+            })
+        }
+
+        btnGroupChat.setOnClickListener {
+            startActivity(Intent(this, ChatActivity::class.java).apply {
+                putExtra("group", true)
                 putExtra("myName", myDeviceName)
             })
         }
@@ -103,19 +110,8 @@ class MainActivity : BaseActivity() {
         if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
     }
 
-    private fun updateDarkIcon() {
-        val mode = PrefsHelper.getDarkMode(this)
-        val icon = when (mode) {
-            1 -> android.R.drawable.ic_menu_view  // dark aktif
-            0 -> android.R.drawable.ic_menu_view  // light aktif
-            else -> android.R.drawable.ic_menu_view  // follow system
-        }
-        btnDarkMode.setImageResource(icon)
-    }
-
     private fun toggleDarkMode() {
         val current = PrefsHelper.getDarkMode(this)
-        // cycle: -1 (system) -> 0 (light) -> 1 (dark) -> -1 (system)
         val next = when (current) {
             -1 -> 0
             0 -> 1

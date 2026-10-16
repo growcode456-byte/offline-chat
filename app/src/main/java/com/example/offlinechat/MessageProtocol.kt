@@ -7,7 +7,8 @@ data class ChatMessage(
     val text: String,
     val timestamp: Long,
     val isMine: Boolean = false,
-    val imageData: String? = null  // base64 kalau ada gambar
+    val imageData: String? = null,
+    val senderColor: Int? = null  // untuk grup: warna nama pengirim
 ) {
     fun toJson(): String {
         val o = JSONObject()
@@ -15,6 +16,7 @@ data class ChatMessage(
         o.put("text", text)
         o.put("ts", timestamp)
         if (imageData != null) o.put("img", imageData)
+        if (senderColor != null) o.put("color", senderColor)
         return o.toString()
     }
 
@@ -26,7 +28,8 @@ data class ChatMessage(
                     from = o.getString("from"),
                     text = o.getString("text"),
                     timestamp = o.getLong("ts"),
-                    imageData = if (o.has("img")) o.getString("img") else null
+                    imageData = if (o.has("img")) o.getString("img") else null,
+                    senderColor = if (o.has("color")) o.getInt("color") else null
                 )
             } catch (e: Exception) {
                 null
