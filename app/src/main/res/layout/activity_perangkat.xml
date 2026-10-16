@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/home_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/header_bg"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:elevation="4dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Perangkat"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/perangkatStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WiFi Direct siap"
+            android:textColor="#CCFFFFFF"
+            android:textSize="12sp"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/btnScanPerangkat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Cari Perangkat Sekitar"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_green_light"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnOpenChatPerangkat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="Buka Chat"
+            android:textSize="15sp"
+            android:backgroundTint="@color/brand_accent"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnDisconnectPerangkat"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:text="Putuskan Koneksi"
+            android:textSize="15sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/debugPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#1A1A1A"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug Info"
+                android:textColor="#00FF00"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/debugText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#00FF00"
+                android:textSize="10sp"
+                android:fontFamily="monospace"
+                android:paddingTop="4dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Perangkat ditemukan:"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/peerList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+        <TextView
+            android:id="@+id/perangkatEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Belum ada perangkat.\nTap 'Cari Perangkat' untuk mulai."
+            android:textAlignment="center"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:paddingTop="30dp"
+            android:paddingBottom="30dp" />
+    </LinearLayout>
+</LinearLayout>

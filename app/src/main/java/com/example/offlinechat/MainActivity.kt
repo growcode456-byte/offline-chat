@@ -1,234 +1,213 @@
 package com.example.offlinechat
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Color
-import android.net.wifi.p2p.WifiP2pDevice
-import android.net.wifi.p2p.WifiP2pInfo
 import android.os.Bundle
-import android.text.InputType
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : BaseActivity() {
 
-    private lateinit var wifiManager: WifiDirectManager
-    private lateinit var adapter: PeerAdapter
+    private lateinit var chatList: RecyclerView
+    private lateinit var chatAdapter: ChatAdapter
+    private lateinit var emptyText: TextView
     private lateinit var statusText: TextView
-    private lateinit var myNameText: TextView
-    private lateinit var debugText: TextView
-    private lateinit var debugPanel: LinearLayout
-    private lateinit var btnScan: Button
-    private lateinit var btnOpenChat: Button
-    private lateinit var btnDisconnect: Button
-    private lateinit var btnTestChat: Button
-    private lateinit var btnGroupChat: Button
-    private lateinit var btnSettings: ImageButton
     private lateinit var btnDarkMode: ImageButton
+    private lateinit var fabNewChat: FloatingActionButton
+    private lateinit var bottomNav: BottomNavigationView
+    private lateinit var searchInput: EditText
 
-    private var isConnected = false
-    private var isGroupOwner = false
-    private var connectedPeerName: String? = null
-    private var myDeviceName: String = "Saya"
+    private var allChats = listOf<ChatPreview>()
+    private var currentTab = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        chatList = findViewById(R.id.chatList)
+        emptyText = findViewById(R.id.emptyText)
         statusText = findViewById(R.id.statusText)
-        myNameText = findViewById(R.id.myNameText)
-        debugText = findViewById(R.id.debugText)
-        debugPanel = findViewById(R.id.debugPanel)
-        btnScan = findViewById(R.id.btnScan)
-        btnOpenChat = findViewById(R.id.btnOpenChat)
-        btnDisconnect = findViewById(R.id.btnDisconnect)
-        btnTestChat = findViewById(R.id.btnTestChat)
-        btnGroupChat = findViewById(R.id.btnGroupChat)
-        btnSettings = findViewById(R.id.btnSettings)
         btnDarkMode = findViewById(R.id.btnDarkMode)
-        val list = findViewById<RecyclerView>(R.id.peerList)
+        fabNewChat = findViewById(R.id.fabNewChat)
+        bottomNav = findViewById(R.id.bottomNav)
+        searchInput = findViewById(R.id.searchInput)
 
-        myDeviceName = PrefsHelper.getName(this)
-        myNameText.text = "Nama kamu: $myDeviceName"
+        chatAdapter = ChatAdapter { preview -> openChat(preview) }
+        chatList.layoutManager = LinearLayoutManager(this)
+        chatList.adapter = chatAdapter
 
-        adapter = PeerAdapter { device ->
-            if (isConnected) {
-                Toast.makeText(this, "Sudah terhubung ke $connectedPeerName", Toast.LENGTH_SHORT).show()
-            } else {
-                showConnectDialog(device)
-            }
-        }
-        list.layoutManager = LinearLayoutManager(this)
-        list.adapter = adapter
-
-        wifiManager = WifiDirectManager(this).apply {
-            onPeersChanged = { devices -> runOnUiThread { adapter.update(devices) } }
-            onStatusChanged = { msg -> runOnUiThread { statusText.text = msg } }
-            onConnectionInfo = { info -> runOnUiThread { handleConnectionInfo(info) } }
-            onDebugInfo = { msg -> runOnUiThread { appendDebug(msg) } }
-        }
-
-        if (!wifiManager.init()) statusText.text = "WiFi Direct gak didukung"
-
-        btnScan.setOnClickListener {
-            if (PermissionHelper.hasAll(this)) {
-                wifiManager.discoverPeers()
-                debugPanel.visibility = View.VISIBLE
-            } else {
-                PermissionHelper.request(this)
-            }
-        }
-
-        btnOpenChat.setOnClickListener {
-            startActivity(Intent(this, ChatActivity::class.java).apply {
-                putExtra("isGroupOwner", isGroupOwner)
-                putExtra("myName", myDeviceName)
-                putExtra("peerName", connectedPeerName ?: "Peer")
-            })
-        }
-
-        btnTestChat.setOnClickListener {
-            startActivity(Intent(this, ChatActivity::class.java).apply {
-                putExtra("loopback", true)
-                putExtra("myName", myDeviceName)
-            })
-        }
-
-        btnGroupChat.setOnClickListener {
-            startActivity(Intent(this, ChatActivity::class.java).apply {
-                putExtra("group", true)
-                putExtra("myName", myDeviceName)
-            })
-        }
-
-        btnSettings.setOnClickListener { showNameDialog() }
         btnDarkMode.setOnClickListener { toggleDarkMode() }
+        fabNewChat.setOnClickListener { showNewChatDialog() }
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {
+                filterChats(s?.toString() ?: "")
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
-        btnDisconnect.setOnClickListener {
-            wifiManager.disconnect()
-            isConnected = false
-            connectedPeerName = null
-            btnDisconnect.visibility = Button.GONE
-            btnOpenChat.visibility = Button.GONE
-            statusText.text = "Terputus"
-            appendDebug("Disconnect")
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_chat -> { showChatTab(); true }
+                R.id.nav_perangkat -> { showFragment(PerangkatFragment()); true }
+                R.id.nav_setting -> { showFragment(SettingFragment()); true }
+                else -> false
+            }
         }
 
-        if (!PermissionHelper.hasAll(this)) PermissionHelper.request(this)
+        bottomNav.selectedItemId = R.id.nav_chat
     }
 
-    private fun appendDebug(msg: String) {
-        val current = debugText.text.toString()
-        val lines = current.split("\n").takeLast(4)
-        debugText.text = (lines + msg).joinToString("\n")
-        debugPanel.visibility = View.VISIBLE
+    override fun onResume() {
+        super.onResume()
+        if (currentTab == 0) loadChats()
+    }
+
+    private fun showChatTab() {
+        currentTab = 0
+        chatList.visibility = View.VISIBLE
+        searchInput.visibility = View.VISIBLE
+        fabNewChat.visibility = View.VISIBLE
+        statusText.visibility = View.VISIBLE
+        loadChats()
+    }
+
+    private fun showFragment(fragment: Fragment) {
+        currentTab = 1
+        chatList.visibility = View.GONE
+        searchInput.visibility = View.GONE
+        fabNewChat.visibility = View.GONE
+        emptyText.visibility = View.GONE
+        statusText.visibility = View.GONE
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
+    }
+
+    private fun loadChats() {
+        val db = AppDatabase.get(this)
+        lifecycleScope.launch {
+            try {
+                val prefs = PrefsHelper.getName(this@MainActivity)
+                val list = mutableListOf<ChatPreview>()
+
+                // Loopback chat
+                val loopback = db.messageDao().getLastMessage("loopback")
+                if (loopback != null) {
+                    list.add(ChatPreview(
+                        chatId = "loopback",
+                        title = "Test Chat (1 HP)",
+                        lastMessage = loopback.text.ifEmpty { "[Gambar]" },
+                        lastTimestamp = loopback.timestamp,
+                        isGroup = false,
+                        colorAccent = 0xFF6A1B9A.toInt()
+                    ))
+                }
+
+                // Group chat
+                val group = db.messageDao().getLastMessage("group_sim")
+                if (group != null) {
+                    list.add(ChatPreview(
+                        chatId = "group_sim",
+                        title = "Grup (Budi, Sari, Andi)",
+                        lastMessage = "${group.from}: ${group.text.ifEmpty { "[Gambar]" }}",
+                        lastTimestamp = group.timestamp,
+                        isGroup = true,
+                        colorAccent = 0xFF00897B.toInt()
+                    ))
+                }
+
+                allChats = list.sortedByDescending { it.lastTimestamp }
+                applyFilter()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun filterChats(query: String) {
+        applyFilter(query)
+    }
+
+    private fun applyFilter(query: String = searchInput.text.toString()) {
+        val filtered = if (query.isBlank()) allChats
+        else allChats.filter {
+            it.title.contains(query, ignoreCase = true) ||
+            it.lastMessage.contains(query, ignoreCase = true)
+        }
+
+        chatAdapter.update(filtered)
+        if (filtered.isEmpty()) {
+            emptyText.visibility = View.VISIBLE
+            emptyText.text = if (allChats.isEmpty())
+                "Belum ada chat.\nTap tombol + untuk mulai."
+            else "Chat gak ditemukan"
+        } else {
+            emptyText.visibility = View.GONE
+        }
+    }
+
+    private fun openChat(preview: ChatPreview) {
+        startActivity(Intent(this, ChatActivity::class.java).apply {
+            putExtra("myName", PrefsHelper.getName(this@MainActivity))
+            when (preview.chatId) {
+                "loopback" -> putExtra("loopback", true)
+                "group_sim" -> putExtra("group", true)
+            }
+        })
+    }
+
+    private fun showNewChatDialog() {
+        val options = arrayOf(
+            "Test Chat (1 HP)",
+            "Test Grup (3 Bot)",
+            "Cari Perangkat (WiFi Direct)"
+        )
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Mulai Chat Baru")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> startActivity(Intent(this, ChatActivity::class.java).apply {
+                        putExtra("loopback", true)
+                        putExtra("myName", PrefsHelper.getName(this))
+                    })
+                    1 -> startActivity(Intent(this, ChatActivity::class.java).apply {
+                        putExtra("group", true)
+                        putExtra("myName", PrefsHelper.getName(this))
+                    })
+                    2 -> {
+                        bottomNav.selectedItemId = R.id.nav_perangkat
+                    }
+                }
+            }
+            .show()
     }
 
     private fun toggleDarkMode() {
         val current = PrefsHelper.getDarkMode(this)
-        val next = when (current) {
-            -1 -> 0
-            0 -> 1
-            else -> -1
-        }
+        val next = when (current) { -1 -> 0; 0 -> 1; else -> -1 }
         PrefsHelper.setDarkMode(this, next)
-        val label = when (next) {
-            -1 -> "Ikut Sistem"
-            0 -> "Mode Terang"
-            else -> "Mode Gelap"
-        }
-        Toast.makeText(this, label, Toast.LENGTH_SHORT).show()
-
+        val label = when (next) { -1 -> "Ikut Sistem"; 0 -> "Mode Terang"; else -> "Mode Gelap" }
+        android.widget.Toast.makeText(this, label, android.widget.Toast.LENGTH_SHORT).show()
         when (next) {
-            -1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            -1 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            0 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+            1 -> androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
         }
         recreate()
-    }
-
-    private fun showNameDialog() {
-        val input = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            setText(myDeviceName)
-            setSelection(text.length)
-            setPadding(40, 30, 40, 30)
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Nama Tampilan")
-            .setMessage("Nama ini muncul saat orang lain menemukan HP kamu")
-            .setView(input)
-            .setPositiveButton("Simpan") { _, _ ->
-                val newName = input.text.toString().trim()
-                if (newName.isEmpty()) {
-                    Toast.makeText(this, "Nama gak boleh kosong", Toast.LENGTH_SHORT).show()
-                } else {
-                    myDeviceName = newName
-                    PrefsHelper.setName(this, newName)
-                    myNameText.text = "Nama kamu: $newName"
-                    Toast.makeText(this, "Tersimpan!", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun showConnectDialog(device: WifiP2pDevice) {
-        AlertDialog.Builder(this)
-            .setTitle("Hubungkan?")
-            .setMessage("Connect ke ${device.deviceName ?: "perangkat"}?\n\nHP kamu bakal jadi CLIENT (bukan server)")
-            .setPositiveButton("Hubungkan sebagai Client") { _, _ ->
-                // Force client biar gak dua-duanya jadi GO
-                wifiManager.connect(device, forceClient = true)
-            }
-            .setNeutralButton("Auto") { _, _ ->
-                wifiManager.connect(device, forceClient = false)
-            }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun handleConnectionInfo(info: WifiP2pInfo) {
-        if (info.groupFormed) {
-            isConnected = true
-            isGroupOwner = info.isGroupOwner
-            val role = if (isGroupOwner) "SERVER (GO)" else "CLIENT"
-            val ip = info.groupOwnerAddress?.hostAddress ?: "?"
-            statusText.text = "✅ Terhubung sebagai $role\nServer IP: $ip"
-            connectedPeerName = if (isGroupOwner) "Client" else "Server"
-            btnDisconnect.visibility = Button.VISIBLE
-            btnOpenChat.visibility = Button.VISIBLE
-            appendDebug("Connected: $role | IP: $ip")
-        } else {
-            isConnected = false
-            connectedPeerName = null
-            btnDisconnect.visibility = Button.GONE
-            btnOpenChat.visibility = Button.GONE
-            statusText.text = "Belum terhubung"
-            appendDebug("Disconnected")
-        }
-    }
-
-    override fun onResume() { super.onResume(); wifiManager.registerReceiver() }
-    override fun onPause() { super.onPause(); wifiManager.unregisterReceiver() }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PermissionHelper.REQ_CODE) {
-            val ok = grantResults.isNotEmpty() &&
-                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            statusText.text = if (ok) "Izin OK, tap Cari" else "Izin ditolak"
-        }
     }
 }

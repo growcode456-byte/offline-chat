@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@android:drawable/sym_action_chat"
+        android:title="Chat" />
+    <item
+        android:id="@+id/nav_perangkat"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="Perangkat" />
+    <item
+        android:id="@+id/nav_setting"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Setting" />
+</menu>
