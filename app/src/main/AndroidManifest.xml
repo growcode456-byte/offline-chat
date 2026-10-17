@@ -30,3 +30,4 @@
         <activity android:name=".ThemeActivity" android:exported="false" />
     </application>
 </manifest>
+ 
