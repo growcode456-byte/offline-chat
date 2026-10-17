@@ -105,7 +105,11 @@ class ChatActivity : BaseActivity() {
 
         db = AppDatabase.get(this)
 
-        adapter = MessageAdapter(isGroup = isGroupMode)
+        adapter = MessageAdapter(isGroup = isGroupMode, onDelete = { timestamp ->
+            lifecycleScope.launch {
+                db.messageDao().deleteMessage(timestamp, chatId)
+            }
+        })
         val lm = LinearLayoutManager(this)
         lm.stackFromEnd = true
         list.layoutManager = lm

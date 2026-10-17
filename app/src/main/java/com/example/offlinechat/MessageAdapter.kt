@@ -194,13 +194,11 @@ class MessageAdapter(
             bubble.layoutParams = params
 
             // ===== LOGIKA HAPUS PESAN =====
-            text.isLongClickable = false
-            time.isLongClickable = false
-            image.isLongClickable = false
-
-            bubble.isLongClickable = true
-            bubble.setOnLongClickListener {
+            // Taruh listener di itemView (seluruh baris chat)
+            itemView.isLongClickable = true
+            itemView.setOnLongClickListener {
                 if (onDelete != null) {
+                    android.widget.Toast.makeText(ctx, "Hapus?", android.widget.Toast.LENGTH_SHORT).show()
                     AlertDialog.Builder(ctx)
                         .setTitle("Hapus Pesan?")
                         .setMessage("Pesan ini bakal dihapus permanen.")
