@@ -54,8 +54,12 @@ class PerangkatFragment : Fragment() {
         debugText = view.findViewById(R.id.debugText)
         val list = view.findViewById<RecyclerView>(R.id.peerList)
 
-        // Adapter manggil Bottom Sheet
-        adapter = PeerAdapter { device -> showConnectMenu(device) }
+        // Adapter langsung connect pas tombol diklik
+        adapter = PeerAdapter { device ->
+            // Paksa jadi Client biar gak rebutan Server
+            wifiManager.connect(device, forceClient = true)
+            statusText.text = "Menghubungkan ke ${device.deviceName}..."
+        }
         list.layoutManager = LinearLayoutManager(requireContext())
         list.adapter = adapter
 
@@ -103,27 +107,7 @@ class PerangkatFragment : Fragment() {
         debugPanel.visibility = View.VISIBLE
     }
 
-    // BOTTOM SHEET (Menu dari bawah)
-    private fun showConnectMenu(device: WifiP2pDevice) {
-        val dialog = BottomSheetDialog(requireContext())
-        val view = layoutInflater.inflate(R.layout.layout_connect_menu, null)
-        dialog.setContentView(view)
 
-        view.findViewById<TextView>(R.id.titleConnect).text = "Hubungkan ke ${device.deviceName ?: "Device"}?"
-
-        view.findViewById<View>(R.id.btnConnectClient).setOnClickListener {
-            wifiManager.connect(device, forceClient = true)
-            dialog.dismiss()
-        }
-        view.findViewById<View>(R.id.btnConnectAuto).setOnClickListener {
-            wifiManager.connect(device, forceClient = false)
-            dialog.dismiss()
-        }
-        view.findViewById<View>(R.id.btnCancelConnect).setOnClickListener {
-            dialog.dismiss()
-        }
-        dialog.show()
-    }
 
     private fun handleConnectionInfo(info: WifiP2pInfo) {
         if (info.groupFormed) {
