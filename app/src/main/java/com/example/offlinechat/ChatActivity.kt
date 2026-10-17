@@ -141,8 +141,23 @@ class ChatActivity : BaseActivity() {
         } else {
             mode = "tcp"
             isServer = wfdIsServer
-            statusText.text = if (isServer) "TCP Server" else "TCP Client"
-            if (isServer) startTcpServer() else startTcpClient()
+            
+            if (isServer) {
+                statusText.text = "Menyalakan Server..."
+                startTcpServer()
+            } else {
+                statusText.text = "Menunggu Server siap..."
+                startTcpClient()
+                
+                // FALLBACK: Kalau dalam 3 detik gak dapet Server, ubah jadi Server!
+                handler.postDelayed({
+                    if (statusText.text.contains("Menunggu Server")) {
+                        isServer = true
+                        statusText.text = "Tidak ada server, jadi Server..."
+                        startTcpServer()
+                    }
+                }, 3000)
+            }
         }
 
         input.addTextChangedListener(object : TextWatcher {
