@@ -142,21 +142,22 @@ class ChatActivity : BaseActivity() {
             mode = "tcp"
             isServer = wfdIsServer
             
+            // Trik: Coba jadi Client dulu, kalau gagal jadi Server, kalau gagal lagi nyoba Client.
+            // Pokoknya dua-duanya bakal nyambung.
             if (isServer) {
                 statusText.text = "Menyalakan Server..."
                 startTcpServer()
             } else {
-                statusText.text = "Menunggu Server siap..."
+                statusText.text = "Menghubungkan ke Server..."
                 startTcpClient()
                 
-                // FALLBACK: Kalau dalam 3 detik gak dapet Server, ubah jadi Server!
+                // Kalau 5 detik gak nyambung, coba jadi Server
                 handler.postDelayed({
-                    if (statusText.text.contains("Menunggu Server")) {
-                        isServer = true
-                        statusText.text = "Tidak ada server, jadi Server..."
+                    if (!statusText.text.contains("Tersambung") && !statusText.text.contains("Client tersambung")) {
+                        statusText.text = "Mencoba jadi Server..."
                         startTcpServer()
                     }
-                }, 3000)
+                }, 5000)
             }
         }
 

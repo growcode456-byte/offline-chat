@@ -48,7 +48,7 @@ class ChatClient(
     fun send(msg: ChatMessage) {
         try { 
             if (writer == null) {
-                onStatus("❌ Server belum siap, pesan gagal dikirim")
+                onStatus("❌ Belum nyambung ke HP satunya...")
                 return
             }
             writer?.println(msg.toJson()) 
