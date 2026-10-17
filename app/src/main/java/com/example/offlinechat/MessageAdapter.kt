@@ -197,9 +197,18 @@ class MessageAdapter(
             }
             bubble.layoutParams = params
 
-            // MENU TAP-LAMA ALA WHATSAPP
-            itemView.isLongClickable = true
-            itemView.setOnLongClickListener {
+            // MATIKAN KLIK DI TEKS & GAMBAR BIAR SEMUA LARI KE BUBBLE
+            text.isClickable = false
+            text.isLongClickable = false
+            time.isClickable = false
+            time.isLongClickable = false
+            image.isClickable = false
+            image.isLongClickable = false
+
+            // PASANG LISTENER DI BUBBLE (BUKAN DI ITEMVIEW)
+            bubble.isClickable = true
+            bubble.isLongClickable = true
+            bubble.setOnLongClickListener {
                 val dialog = BottomSheetDialog(ctx)
                 val view = LayoutInflater.from(ctx).inflate(R.layout.layout_message_menu, null)
                 dialog.setContentView(view)
@@ -223,6 +232,8 @@ class MessageAdapter(
 
                 dialog.show()
                 true
+            }
+            return@setOnLongClickListener true
             }
 
             // Tap gambar → Fullscreen
