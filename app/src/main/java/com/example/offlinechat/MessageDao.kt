@@ -18,4 +18,7 @@ interface MessageDao {
 
     @Query("DELETE FROM messages WHERE chatId = :chatId")
     suspend fun clearChat(chatId: String)
+
+    @Query("DELETE FROM messages WHERE timestamp = :timestamp AND chatId = :chatId")
+    suspend fun deleteMessage(timestamp: Long, chatId: String)
 }

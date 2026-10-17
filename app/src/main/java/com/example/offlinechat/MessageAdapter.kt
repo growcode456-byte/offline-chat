@@ -26,7 +26,8 @@ sealed class ChatItem {
 
 class MessageAdapter(
     private val isGroup: Boolean = false,
-    private val context: android.content.Context? = null
+    private val context: android.content.Context? = null,
+    private val onDelete: ((Long) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<ChatItem>()
