@@ -113,7 +113,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_gallery"
+                android:src="@drawable/ic_attach_outline"
                 android:tint="#8696A0"
                 android:scaleType="centerInside"
                 android:contentDescription="Lampiran" />
@@ -124,7 +124,7 @@
                 android:layout_height="32dp"
                 android:layout_marginStart="4dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_camera"
+                android:src="@drawable/ic_camera_outline"
                 android:tint="#8696A0"
                 android:scaleType="centerInside"
                 android:contentDescription="Kamera" />
