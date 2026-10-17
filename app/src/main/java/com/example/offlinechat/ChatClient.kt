@@ -25,20 +25,20 @@ class ChatClient(
                 try {
                     onStatus("Mencari Server...")
                     socket = Socket()
-                    socket?.connect(InetSocketAddress(serverIp, port), 3000) // Timeout 3 detik
+                    socket?.connect(InetSocketAddress(serverIp, port), 3000)
                     onStatus("✅ Tersambung ke server!")
                     writer = PrintWriter(socket!!.getOutputStream(), true)
                     val reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
                     
-                    var line: String?
-                    while (running && reader.readLine().also { line = it } != null) {
-                        val msg = ChatMessage.fromJson(line!!)
+                    while (running) {
+                        val line: String = reader.readLine() ?: break
+                        val msg = ChatMessage.fromJson(line)
                         if (msg != null) onMessage(msg)
                     }
                 } catch (e: Exception) {
                     if (running) {
                         onStatus("Menunggu Server siap...")
-                        Thread.sleep(2000) // Jeda 2 detik sebelum retry
+                        try { Thread.sleep(2000) } catch (_: InterruptedException) {}
                     }
                 }
             }
