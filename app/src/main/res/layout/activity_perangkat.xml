@@ -65,7 +65,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="HP kamu sedang mencari HP lain di sekitar secara otomatis. Pastikan WiFi & GPS nyala."
+                    android:text="HP kamu sedang mencari HP lain di sekitar secara otomatis. Pastikan WiFi &amp; GPS nyala."
                     android:textAlignment="center"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
