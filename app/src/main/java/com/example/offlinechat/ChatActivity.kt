@@ -365,11 +365,23 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun startTcpClient() {
+        // Ambil IP Server dari WifiP2pManager (biasanya 192.168.49.1)
+        val serverIp = "192.168.49.1" 
+        
         tcpClient = ChatClient(
-            serverIp = "192.168.49.1",
+            serverIp = serverIp,
             port = 8888,
             onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
-            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
+            onStatus = { s: String -> runOnUiThread { 
+                statusText.text = s 
+                // Kalau connection refused, coba lagi 2 detik kemudian
+                if (s.contains("refused", ignoreCase = true) || s.contains("timeout", ignoreCase = true)) {
+                    handler.postDelayed({
+                        statusText.text = "Mencoba ulang connect..."
+                        tcpClient?.connect()
+                    }, 2000)
+                }
+            } }
         )
         tcpClient?.connect()
     }
