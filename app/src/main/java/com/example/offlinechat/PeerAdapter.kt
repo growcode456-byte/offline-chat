@@ -1,6 +1,5 @@
 package com.example.offlinechat
 
-import android.content.Intent
 import android.net.wifi.p2p.WifiP2pDevice
 import android.view.LayoutInflater
 import android.view.View
@@ -29,7 +28,7 @@ class PeerAdapter(
         val device = items[position]
         holder.name.text = device.deviceName ?: "Tanpa nama"
         holder.info.text = when (device.status) {
-            WifiP2pDevice.AVAILABLE -> "Tersedia (Tap untuk connect)"
+            WifiP2pDevice.AVAILABLE -> "Tersedia (Tap untuk hubungkan)"
             WifiP2pDevice.INVITED -> "Diundang"
             WifiP2pDevice.CONNECTED -> "Terhubung"
             WifiP2pDevice.FAILED -> "Gagal"
@@ -37,14 +36,7 @@ class PeerAdapter(
             else -> "?"
         }
         
-        // Pindah ke ConnectActivity saat di-tap
-        holder.itemView.setOnClickListener {
-            val intent = Intent(holder.itemView.context, ConnectActivity::class.java).apply {
-                putExtra(ConnectActivity.EXTRA_DEVICE_NAME, device.deviceName)
-                putExtra(ConnectActivity.EXTRA_DEVICE_ADDRESS, device.deviceAddress)
-            }
-            holder.itemView.context.startActivity(intent)
-        }
+        holder.itemView.setOnClickListener { onTap(device) }
     }
 
     override fun getItemCount() = items.size

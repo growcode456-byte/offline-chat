@@ -1,7 +1,6 @@
 package com.example.offlinechat
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import android.os.Bundle
@@ -13,11 +12,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class PerangkatFragment : Fragment() {
 
@@ -56,10 +54,8 @@ class PerangkatFragment : Fragment() {
         debugText = view.findViewById(R.id.debugText)
         val list = view.findViewById<RecyclerView>(R.id.peerList)
 
-        adapter = PeerAdapter { device ->
-            if (isConnected) Toast.makeText(requireContext(), "Sudah terhubung", Toast.LENGTH_SHORT).show()
-            else showConnectDialog(device)
-        }
+        // Adapter manggil Bottom Sheet
+        adapter = PeerAdapter { device -> showConnectMenu(device) }
         list.layoutManager = LinearLayoutManager(requireContext())
         list.adapter = adapter
 
@@ -80,6 +76,7 @@ class PerangkatFragment : Fragment() {
             }
         }
 
+        // TOMBOL BUKA CHAT
         btnOpenChat.setOnClickListener {
             val myName = PrefsHelper.getName(requireContext())
             startActivity(Intent(requireContext(), ChatActivity::class.java).apply {
@@ -106,18 +103,26 @@ class PerangkatFragment : Fragment() {
         debugPanel.visibility = View.VISIBLE
     }
 
-    private fun showConnectDialog(device: WifiP2pDevice) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Hubungkan?")
-            .setMessage("Connect ke ${device.deviceName ?: "perangkat"}?")
-            .setPositiveButton("Sebagai Client") { _, _ ->
-                wifiManager.connect(device, forceClient = true)
-            }
-            .setNeutralButton("Auto") { _, _ ->
-                wifiManager.connect(device, forceClient = false)
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+    // BOTTOM SHEET (Menu dari bawah)
+    private fun showConnectMenu(device: WifiP2pDevice) {
+        val dialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.layout_connect_menu, null)
+        dialog.setContentView(view)
+
+        view.findViewById<TextView>(R.id.titleConnect).text = "Hubungkan ke ${device.deviceName ?: "Device"}?"
+
+        view.findViewById<View>(R.id.btnConnectClient).setOnClickListener {
+            wifiManager.connect(device, forceClient = true)
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btnConnectAuto).setOnClickListener {
+            wifiManager.connect(device, forceClient = false)
+            dialog.dismiss()
+        }
+        view.findViewById<View>(R.id.btnCancelConnect).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
     private fun handleConnectionInfo(info: WifiP2pInfo) {
@@ -126,8 +131,11 @@ class PerangkatFragment : Fragment() {
             isGroupOwner = info.isGroupOwner
             val role = if (isGroupOwner) "SERVER (GO)" else "CLIENT"
             val ip = info.groupOwnerAddress?.hostAddress ?: "?"
-            statusText.text = "Terhubung - $role | IP: $ip"
+            
+            statusText.text = "✅ Terhubung - $role | IP: $ip"
             connectedPeerName = if (isGroupOwner) "Client" else "Server"
+            
+            // MUNCULIN TOMBOL
             btnDisconnect.visibility = View.VISIBLE
             btnOpenChat.visibility = View.VISIBLE
         } else {
