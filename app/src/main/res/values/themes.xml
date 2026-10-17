@@ -13,4 +13,9 @@
         <item name="android:navigationBarColor">@color/bubble_other</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
+
+    <style name="RoundedImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 </resources>
