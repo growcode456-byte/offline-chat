@@ -183,7 +183,16 @@ class MessageAdapter(
             }
             bubble.background = bg
 
-            // Long press gambar → simpan ke galeri
+            // Tap gambar → buka fullscreen viewer
+            image.setOnClickListener {
+                if (msg.imageData != null) {
+                    val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
+                    intent.putExtra("imageData", msg.imageData)
+                    ctx.startActivity(intent)
+                }
+            }
+
+            // Long press gambar → simpan ke galeri (tetap ada sebagai shortcut)
             image.setOnLongClickListener {
                 if (msg.imageData != null) {
                     AlertDialog.Builder(ctx)

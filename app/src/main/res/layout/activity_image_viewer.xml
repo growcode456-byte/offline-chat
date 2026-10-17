@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Gambar fullscreen -->
+    <ImageView
+        android:id="@+id/fullImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="Gambar" />
+
+    <!-- Tombol Close (X) di kiri atas -->
+    <ImageButton
+        android:id="@+id/btnCloseViewer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:background="#80000000"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="#FFFFFF"
+        android:padding="12dp"
+        android:contentDescription="Tutup" />
+
+    <!-- Tombol Download di kanan atas -->
+    <ImageButton
+        android:id="@+id/btnDownloadViewer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:background="#80000000"
+        android:src="@android:drawable/stat_sys_download"
+        android:tint="#FFFFFF"
+        android:padding="12dp"
+        android:contentDescription="Simpan" />
+</FrameLayout>

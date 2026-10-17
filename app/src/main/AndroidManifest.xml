@@ -32,6 +32,7 @@
         <activity android:name=".ProfileActivity" android:exported="false" />
         <activity android:name=".WallpaperActivity" android:exported="false" />
         <activity android:name=".ThemeActivity" android:exported="false" />
+        <activity android:name=".ImageViewerActivity" android:exported="false" />
     </application>
 </manifest>
  
