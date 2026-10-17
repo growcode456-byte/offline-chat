@@ -28,7 +28,6 @@ class WifiDirectManager(private val context: Context) {
     var onPeersChanged: ((List<WifiP2pDevice>) -> Unit)? = null
     var onStatusChanged: ((String) -> Unit)? = null
     var onConnectionInfo: ((WifiP2pInfo) -> Unit)? = null
-    var onThisDeviceChanged: ((WifiP2pDevice) -> Unit)? = null
     var onDebugInfo: ((String) -> Unit)? = null
 
     private var lastDevice: WifiP2pDevice? = null
@@ -41,9 +40,8 @@ class WifiDirectManager(private val context: Context) {
                 WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION -> {
                     val state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1)
                     onStatusChanged?.invoke(
-                        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
-                            "WiFi Direct aktif"
-                        else "WiFi Direct MATI - nyalakan WiFi"
+                        if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) "WiFi Direct aktif"
+                        else "WiFi Direct MATI"
                     )
                 }
                 WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> requestPeers()
@@ -59,26 +57,19 @@ class WifiDirectManager(private val context: Context) {
                             onStatusChanged?.invoke("✅ Terhubung - $role\nServer IP: $ip")
                             onDebugInfo?.invoke("Role: $role | IP: $ip")
                         } else {
-                            onStatusChanged?.invoke("⚠️ Koneksi terputus, coba lagi...")
+                            onStatusChanged?.invoke("⚠️ Koneksi terputus")
                         }
                         onConnectionInfo?.invoke(info)
                     }
-                }
-                WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
-                    val device: WifiP2pDevice? = intent.getParcelableExtra("wifiP2pDevice")
-                    if (device != null) onThisDeviceChanged?.invoke(device)
                 }
             }
         }
     }
 
     fun init(): Boolean {
-        if (manager == null) {
-            onStatusChanged?.invoke("WiFi Direct gak didukung HP ini")
-            return false
-        }
+        if (manager == null) return false
         channel = manager.initialize(context, Looper.getMainLooper()) {
-            onStatusChanged?.invoke("WiFi Direct channel terputus")
+            onStatusChanged?.invoke("Channel terputus")
         }
         return true
     }
@@ -88,13 +79,8 @@ class WifiDirectManager(private val context: Context) {
             addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
             addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)
             addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)
-            addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)
         }
-        try {
-            context.registerReceiver(receiver, filter)
-        } catch (e: Exception) {
-            onStatusChanged?.invoke("Gagal register receiver: ${e.message}")
-        }
+        try { context.registerReceiver(receiver, filter) } catch (e: Exception) {}
     }
 
     fun unregisterReceiver() {
@@ -105,13 +91,11 @@ class WifiDirectManager(private val context: Context) {
     fun discoverPeers() {
         val m = manager ?: return
         val c = channel ?: return
-        if (!hasPermissions()) { onStatusChanged?.invoke("Izin belum lengkap"); return }
+        if (!hasPermissions()) return
         onStatusChanged?.invoke("Mencari perangkat...")
         m.discoverPeers(c, object : ActionListener {
-            override fun onSuccess() { onStatusChanged?.invoke("Scan dimulai, tunggu...") }
-            override fun onFailure(reason: Int) {
-                onStatusChanged?.invoke("Gagal scan: kode $reason")
-            }
+            override fun onSuccess() { onStatusChanged?.invoke("Scan dimulai...") }
+            override fun onFailure(reason: Int) { onStatusChanged?.invoke("Gagal scan: $reason") }
         })
     }
 
@@ -123,8 +107,6 @@ class WifiDirectManager(private val context: Context) {
         m.requestPeers(c) { peerList ->
             val devices = peerList.deviceList.toList()
             onPeersChanged?.invoke(devices)
-            if (devices.isEmpty()) onStatusChanged?.invoke("Belum ada perangkat")
-            else onStatusChanged?.invoke("${devices.size} perangkat ditemukan")
         }
     }
 
@@ -132,15 +114,14 @@ class WifiDirectManager(private val context: Context) {
     fun connect(device: WifiP2pDevice, forceClient: Boolean = false) {
         val m = manager ?: return
         val c = channel ?: return
-        if (!hasPermissions()) { onStatusChanged?.invoke("Izin belum lengkap"); return }
+        if (!hasPermissions()) return
 
         lastDevice = device
         retryCount = 0
 
         val config = WifiP2pConfig().apply {
             deviceAddress = device.deviceAddress
-            // groupOwnerIntent: 0 = paling gak mau jadi GO, 15 = paling mau jadi GO
-            // Kalau forceClient = true, kita gak mau jadi GO
+            // 0 = Client (gak mau jadi GO), 15 = Server (mau jadi GO)
             groupOwnerIntent = if (forceClient) 0 else 7
         }
 
@@ -148,23 +129,14 @@ class WifiDirectManager(private val context: Context) {
         onDebugInfo?.invoke("Connect: forceClient=$forceClient | intent=${config.groupOwnerIntent}")
 
         m.connect(c, config, object : ActionListener {
-            override fun onSuccess() {
-                onStatusChanged?.invoke("Negosiasi koneksi...")
-            }
+            override fun onSuccess() { onStatusChanged?.invoke("Negosiasi koneksi...") }
             override fun onFailure(reason: Int) {
-                val reasonText = when (reason) {
-                    WifiP2pManager.ERROR -> "ERROR umum"
-                    WifiP2pManager.P2P_UNSUPPORTED -> "Tidak didukung"
-                    WifiP2pManager.BUSY -> "Sibuk, coba lagi"
-                    else -> "Kode $reason"
-                }
-                onDebugInfo?.invoke("Connect gagal: $reasonText (retry=$retryCount)")
                 if (retryCount < maxRetry) {
                     retryCount++
-                    onStatusChanged?.invoke("Gagal ($reasonText), retry $retryCount/$maxRetry...")
+                    onStatusChanged?.invoke("Gagal, retry $retryCount/$maxRetry...")
                     handler.postDelayed({ connect(device, forceClient) }, 2000)
                 } else {
-                    onStatusChanged?.invoke("Gagal connect: $reasonText")
+                    onStatusChanged?.invoke("Gagal connect: kode $reason")
                 }
             }
         })
@@ -176,23 +148,8 @@ class WifiDirectManager(private val context: Context) {
         val c = channel ?: return
         m.removeGroup(c, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Terputus") }
-            override fun onFailure(reason: Int) {
-                onStatusChanged?.invoke("Gagal putus: kode $reason")
-            }
+            override fun onFailure(reason: Int) {}
         })
-    }
-
-    /**
-     * Cek apakah HP ini Group Owner dari koneksi yang aktif
-     */
-    @SuppressLint("MissingPermission")
-    fun isGroupOwner(callback: (Boolean) -> Unit) {
-        val m = manager ?: return
-        val c = channel ?: return
-        if (!hasPermissions()) { callback(false); return }
-        m.requestConnectionInfo(c) { info ->
-            callback(info.isGroupOwner)
-        }
     }
 
     private fun hasPermissions(): Boolean {
