@@ -76,6 +76,7 @@ class ChatActivity : BaseActivity() {
 
         val isLoopback = intent.getBooleanExtra("loopback", false)
         val isGroupMode = intent.getBooleanExtra("group", false)
+        val isHotspotMode = intent.getBooleanExtra("hotspotMode", false)
         val wfdIsServer = intent.getBooleanExtra("isGroupOwner", false)
         val wfdPeer = intent.getStringExtra("peerName") ?: "Peer"
 
@@ -127,7 +128,11 @@ class ChatActivity : BaseActivity() {
             }
         }
 
-        if (isGroupMode) {
+        if (isHotspotMode) {
+            mode = "tcp"
+            statusText.text = "Mode Hotspot (Client). Mencari IP..."
+            startTcpClientCustom("192.168.43.1") // IP Standar Hotspot Android
+        } else if (isGroupMode) {
             mode = "group"
             statusText.text = "Grup simulasi • ${groupBots.size} anggota"
         } else if (isLoopback) {
@@ -362,6 +367,16 @@ class ChatActivity : BaseActivity() {
             onStatus = { s: String -> runOnUiThread { statusText.text = s } }
         )
         tcpServer?.start()
+    }
+
+    private fun startTcpClientCustom(ip: String) {
+        tcpClient = ChatClient(
+            serverIp = ip,
+            port = 8888,
+            onMessage = { msg: ChatMessage -> runOnUiThread { addAndSave(msg.copy(isMine = false)) } },
+            onStatus = { s: String -> runOnUiThread { statusText.text = s } }
+        )
+        tcpClient?.connect()
     }
 
     private fun startTcpClient() {

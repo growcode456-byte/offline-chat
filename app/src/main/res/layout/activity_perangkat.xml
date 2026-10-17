@@ -1,127 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/home_bg">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/header_bg"
-        android:orientation="vertical"
-        android:padding="20dp"
-        android:elevation="4dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Perangkat"
-            android:textColor="#FFFFFF"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/perangkatStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="WiFi Direct siap"
-            android:textColor="#CCFFFFFF"
-            android:textSize="12sp"
-            android:paddingTop="4dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <Button
-            android:id="@+id/btnScanPerangkat"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Cari Perangkat Sekitar"
-            android:textSize="15sp"
-            android:backgroundTint="@color/brand_green_light"
-            android:textColor="#FFFFFF" />
-
-        <Button
-            android:id="@+id/btnOpenChatPerangkat"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:text="Buka Chat"
-            android:textSize="15sp"
-            android:backgroundTint="@color/brand_accent"
-            android:textColor="#FFFFFF"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnDisconnectPerangkat"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:text="Putuskan Koneksi"
-            android:textSize="15sp"
-            android:backgroundTint="#E53935"
-            android:textColor="#FFFFFF"
-            android:visibility="gone" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/debugPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#1A1A1A"
+            android:background="@drawable/header_bg"
             android:orientation="vertical"
-            android:padding="10dp"
-            android:visibility="gone">
-
+            android:padding="20dp"
+            android:elevation="4dp">
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Debug Info"
-                android:textColor="#00FF00"
-                android:textSize="11sp"
+                android:text="Hubungkan HP"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
                 android:textStyle="bold" />
-
             <TextView
-                android:id="@+id/debugText"
+                android:id="@+id/perangkatStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#00FF00"
-                android:textSize="10sp"
-                android:fontFamily="monospace"
+                android:text="Siap mencari..."
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp"
                 android:paddingTop="4dp" />
         </LinearLayout>
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Perangkat ditemukan:"
-            android:paddingTop="16dp"
-            android:paddingBottom="8dp"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:textColor="@color/text_primary" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/peerList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
+            <!-- TAB SWITCH -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bubble_other"
+                app:tabIndicatorColor="@color/brand_accent"
+                app:tabTextColor="@color/text_secondary"
+                app:tabSelectedTextColor="@color/text_primary">
+                <com.google.android.material.tabs.TabItem android:text="Otomatis (WiFi)" />
+                <com.google.android.material.tabs.TabItem android:text="Hotspot (Manual)" />
+            </com.google.android.material.tabs.TabLayout>
 
-        <TextView
-            android:id="@+id/perangkatEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Belum ada perangkat.\nTap 'Cari Perangkat' untuk mulai."
-            android:textAlignment="center"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp"
-            android:paddingTop="30dp"
-            android:paddingBottom="30dp" />
+            <!-- KONTEN WIFI DIRECT (OTOMATIS) -->
+            <LinearLayout
+                android:id="@+id/layoutWifiDirect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="HP kamu sedang mencari HP lain di sekitar secara otomatis. Pastikan WiFi & GPS nyala."
+                    android:textAlignment="center"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:paddingBottom="20dp" />
+
+                <!-- List device wifi direct (opsional, buat nampilin aja) -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/peerList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- KONTEN HOTSPOT (MANUAL) -->
+            <LinearLayout
+                android:id="@+id/layoutHotspot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Instruksi Hotspot:"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:paddingBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1. Nyalakan Hotspot Portable di HP A (Settings > Hotspot).\n2. Connect WiFi HP B ke Hotspot HP A.\n3. Klik tombol di bawah ini."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp"
+                    android:paddingBottom="20dp" />
+
+                <Button
+                    android:id="@+id/btnHotspotConnect"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="Hubungkan via Hotspot"
+                    android:backgroundTint="@color/brand_green_light"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <!-- TOMBOL PUTUSKAN -->
+            <Button
+                android:id="@+id/btnDisconnectPerangkat"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
+                android:text="Putuskan Koneksi"
+                android:backgroundTint="#E53935"
+                android:textColor="#FFFFFF"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <!-- TOMBOL BUKA CHAT (MELAYANG) -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/btnOpenChatPerangkat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:text="Buka Chat"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/brand_accent"
+        android:visibility="gone" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
