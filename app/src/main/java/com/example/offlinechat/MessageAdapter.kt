@@ -197,7 +197,7 @@ class MessageAdapter(
             }
             bubble.layoutParams = params
 
-            // MATIKAN KLIK DI TEKS & GAMBAR BIAR SEMUA LARI KE BUBBLE
+            // --- FIX KLIK: Matikan klik di teks & gambar, pindah ke bubble ---
             text.isClickable = false
             text.isLongClickable = false
             time.isClickable = false
@@ -205,15 +205,14 @@ class MessageAdapter(
             image.isClickable = false
             image.isLongClickable = false
 
-            // PASANG LISTENER DI BUBBLE (BUKAN DI ITEMVIEW)
             bubble.isClickable = true
             bubble.isLongClickable = true
+            
             bubble.setOnLongClickListener {
                 val dialog = BottomSheetDialog(ctx)
                 val view = LayoutInflater.from(ctx).inflate(R.layout.layout_message_menu, null)
                 dialog.setContentView(view)
 
-                // Logic Salin
                 view.findViewById<View>(R.id.menuCopy).setOnClickListener {
                     val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("Pesan", msg.text)
@@ -222,7 +221,6 @@ class MessageAdapter(
                     dialog.dismiss()
                 }
 
-                // Logic Hapus
                 view.findViewById<View>(R.id.menuDelete).setOnClickListener {
                     if (onDelete != null) {
                         onDelete.invoke(msg.timestamp)
@@ -233,16 +231,17 @@ class MessageAdapter(
                 dialog.show()
                 true
             }
-            return@setOnLongClickListener true
-            }
 
-            // Tap gambar → Fullscreen
-            image.setOnClickListener {
-                if (msg.imageData != null) {
-                    val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
-                    intent.putExtra("imageData", msg.imageData)
-                    ctx.startActivity(intent)
+            // Tap gambar → Fullscreen (karena isClickable=false, kita set OnTouchListener biar tetep bisa di-tap)
+            image.setOnTouchListener { _, event ->
+                if (event.action == android.view.MotionEvent.ACTION_UP) {
+                    if (msg.imageData != null) {
+                        val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
+                        intent.putExtra("imageData", msg.imageData)
+                        ctx.startActivity(intent)
+                    }
                 }
+                false // return false biar bubble tetep bisa long-press
             }
 
             val anim = AnimationUtils.loadAnimation(ctx, android.R.anim.fade_in)
