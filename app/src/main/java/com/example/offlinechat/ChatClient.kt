@@ -17,28 +17,42 @@ class ChatClient(
     @Volatile private var running = false
 
     fun connect() {
+        if (running) return
         running = true
+        
         Thread {
-            try {
-                onStatus("Connect ke $serverIp:$port...")
-                socket = Socket()
-                socket?.connect(InetSocketAddress(serverIp, port), 5000)
-                onStatus("Tersambung ke server!")
-                writer = PrintWriter(socket!!.getOutputStream(), true)
-                val reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
-                while (running) {
-                    val line: String = reader.readLine() ?: break
-                    val msg = ChatMessage.fromJson(line)
-                    if (msg != null) onMessage(msg)
+            while (running) {
+                try {
+                    onStatus("Mencari Server...")
+                    socket = Socket()
+                    socket?.connect(InetSocketAddress(serverIp, port), 3000) // Timeout 3 detik
+                    onStatus("✅ Tersambung ke server!")
+                    writer = PrintWriter(socket!!.getOutputStream(), true)
+                    val reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
+                    
+                    var line: String?
+                    while (running && reader.readLine().also { line = it } != null) {
+                        val msg = ChatMessage.fromJson(line!!)
+                        if (msg != null) onMessage(msg)
+                    }
+                } catch (e: Exception) {
+                    if (running) {
+                        onStatus("Menunggu Server siap...")
+                        Thread.sleep(2000) // Jeda 2 detik sebelum retry
+                    }
                 }
-            } catch (e: Exception) {
-                if (running) onStatus("Client error: ${e.message}")
             }
         }.start()
     }
 
     fun send(msg: ChatMessage) {
-        try { writer?.println(msg.toJson()) }
+        try { 
+            if (writer == null) {
+                onStatus("❌ Server belum siap, pesan gagal dikirim")
+                return
+            }
+            writer?.println(msg.toJson()) 
+        }
         catch (e: Exception) { onStatus("Gagal kirim: ${e.message}") }
     }
 
