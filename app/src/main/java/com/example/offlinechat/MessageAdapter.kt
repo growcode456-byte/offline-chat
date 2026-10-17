@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.Base64
 import android.view.Gravity
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -181,6 +182,23 @@ class MessageAdapter(
                 setColor(if (msg.isMine) theme.bubbleMine else theme.bubbleOther)
             }
             bubble.background = bg
+
+            // Long press gambar → simpan ke galeri
+            image.setOnLongClickListener {
+                if (msg.imageData != null) {
+                    AlertDialog.Builder(ctx)
+                        .setTitle("Simpan Gambar?")
+                        .setMessage("Simpan gambar ini ke galeri HP?")
+                        .setPositiveButton("Simpan") { _, _ ->
+                            ImageSaver.saveBase64ToGallery(ctx, msg.imageData)
+                        }
+                        .setNegativeButton("Batal", null)
+                        .show()
+                    true
+                } else {
+                    false
+                }
+            }
 
             val anim = AnimationUtils.loadAnimation(ctx, android.R.anim.fade_in)
             anim.duration = 200

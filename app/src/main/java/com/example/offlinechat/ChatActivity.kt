@@ -112,6 +112,7 @@ class ChatActivity : BaseActivity() {
 
         setupEmojiPanel()
         applyWallpaper()
+        requestStoragePermission()
 
         lifecycleScope.launch {
             db.messageDao().getMessages(chatId).collect { entities ->
@@ -171,6 +172,21 @@ class ChatActivity : BaseActivity() {
                 .setNegativeButton("Batal", null)
                 .show()
             true
+        }
+    }
+
+    private fun requestStoragePermission() {
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    5001
+                )
+            }
         }
     }
 
