@@ -46,6 +46,10 @@ class SettingFragment : Fragment() {
             startActivity(Intent(requireContext(), WallpaperActivity::class.java))
         }
 
+        view.findViewById<View>(R.id.rowTheme).setOnClickListener {
+            startActivity(Intent(requireContext(), ThemeActivity::class.java))
+        }
+
         view.findViewById<View>(R.id.rowTestChat).setOnClickListener {
             startActivity(Intent(requireContext(), ChatActivity::class.java).apply {
                 putExtra("loopback", true)
