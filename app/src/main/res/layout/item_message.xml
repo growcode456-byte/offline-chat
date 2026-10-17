@@ -7,6 +7,7 @@
     android:paddingHorizontal="4dp"
     android:paddingVertical="3dp">
 
+    <!-- Tambah clickable & focusable buat long-press hapus -->
     <LinearLayout
         android:id="@+id/bubbleContainer"
         android:layout_width="wrap_content"
@@ -15,22 +16,23 @@
         android:maxWidth="280dp"
         android:background="@drawable/bubble_other"
         android:orientation="vertical"
-        android:paddingHorizontal="4dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp">
+        android:paddingHorizontal="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="4dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground">
 
         <TextView
             android:id="@+id/senderName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="8dp"
             android:paddingBottom="2dp"
             android:text="Nama"
             android:textSize="13sp"
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <!-- Pakai ShapeableImageView biar sudut gambar tumpul -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/messageImage"
             android:layout_width="wrap_content"
@@ -40,29 +42,28 @@
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:visibility="gone"
-            app:shapeAppearanceOverlay="@style/RoundedImage"
-            android:contentDescription="Gambar" />
+            app:shapeAppearanceOverlay="@style/RoundedImage" />
 
+        <!-- Paksa warna teks jadi gelap biar kebaca di bubble terang -->
         <TextView
             android:id="@+id/messageText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="pesan"
-            android:textColor="@color/text_primary"
+            android:textColor="#111111"
             android:textSize="15sp"
             android:lineSpacingExtra="2dp"
-            android:paddingHorizontal="8dp"
             android:paddingTop="2dp" />
 
+        <!-- Paksa warna waktu jadi abu gelap -->
         <TextView
             android:id="@+id/messageTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:text="00:00"
-            android:textColor="@color/text_secondary"
+            android:textColor="#666666"
             android:textSize="10sp"
-            android:paddingHorizontal="8dp"
             android:paddingTop="2dp" />
     </LinearLayout>
 </LinearLayout>
