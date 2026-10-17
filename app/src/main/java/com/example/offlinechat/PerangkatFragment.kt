@@ -72,6 +72,14 @@ class PerangkatFragment : Fragment() {
         wifiManager.init()
 
         btnScan.setOnClickListener {
+            // Cek GPS nyala atau nggak
+            val locationManager = requireContext().getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+            val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)
+            
+            if (!isGpsEnabled) {
+                android.widget.Toast.makeText(requireContext(), "⚠️ Nyalakan GPS/Lokasi dulu di HP kamu!", android.widget.Toast.LENGTH_LONG).show()
+            }
+
             if (PermissionHelper.hasAll(requireActivity())) {
                 wifiManager.discoverPeers()
                 debugPanel.visibility = View.VISIBLE

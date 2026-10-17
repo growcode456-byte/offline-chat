@@ -30,7 +30,6 @@ class WifiDirectManager(private val context: Context) {
     var onConnectionInfo: ((WifiP2pInfo) -> Unit)? = null
     var onDebugInfo: ((String) -> Unit)? = null
 
-    private var lastDevice: WifiP2pDevice? = null
     private var retryCount = 0
     private val maxRetry = 3
 
@@ -91,11 +90,21 @@ class WifiDirectManager(private val context: Context) {
     fun discoverPeers() {
         val m = manager ?: return
         val c = channel ?: return
-        if (!hasPermissions()) return
+        if (!hasPermissions()) {
+            onStatusChanged?.invoke("❌ Izin Lokasi/GPS belum aktif!")
+            return
+        }
+        
         onStatusChanged?.invoke("Mencari perangkat...")
         m.discoverPeers(c, object : ActionListener {
-            override fun onSuccess() { onStatusChanged?.invoke("Scan dimulai...") }
-            override fun onFailure(reason: Int) { onStatusChanged?.invoke("Gagal scan: $reason") }
+            override fun onSuccess() { 
+                onStatusChanged?.invoke("Scan dimulai...")
+                // Paksa baca list setelah 2 detik (siapa tau device langsung kedeteksi)
+                handler.postDelayed({ requestPeers() }, 2000)
+            }
+            override fun onFailure(reason: Int) { 
+                onStatusChanged?.invoke("Gagal scan: kode $reason") 
+            }
         })
     }
 
@@ -107,6 +116,7 @@ class WifiDirectManager(private val context: Context) {
         m.requestPeers(c) { peerList ->
             val devices = peerList.deviceList.toList()
             onPeersChanged?.invoke(devices)
+            onStatusChanged?.invoke("${devices.size} perangkat ditemukan")
         }
     }
 
@@ -116,18 +126,13 @@ class WifiDirectManager(private val context: Context) {
         val c = channel ?: return
         if (!hasPermissions()) return
 
-        lastDevice = device
         retryCount = 0
-
         val config = WifiP2pConfig().apply {
             deviceAddress = device.deviceAddress
-            // 0 = Client (gak mau jadi GO), 15 = Server (mau jadi GO)
             groupOwnerIntent = if (forceClient) 0 else 7
         }
 
         onStatusChanged?.invoke("Menghubungkan ke ${device.deviceName}...")
-        onDebugInfo?.invoke("Connect: forceClient=$forceClient | intent=${config.groupOwnerIntent}")
-
         m.connect(c, config, object : ActionListener {
             override fun onSuccess() { onStatusChanged?.invoke("Negosiasi koneksi...") }
             override fun onFailure(reason: Int) {
