@@ -58,6 +58,14 @@ class PerangkatFragment : Fragment() {
             // Klik manual buat connect (paksa jadi Client)
             wifiManager.connect(device)
             statusText.text = "Menghubungkan ke ${device.deviceName}..."
+            
+            // LANGSUNG PINDAH KE CHAT
+            val myName = PrefsHelper.getName(requireContext())
+            startActivity(Intent(requireContext(), ChatActivity::class.java).apply {
+                putExtra("isGroupOwner", false) // Paksa jadi client
+                putExtra("myName", myName)
+                putExtra("peerName", device.deviceName ?: "Peer")
+            })
         }
         peerList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
         peerList.adapter = adapter
