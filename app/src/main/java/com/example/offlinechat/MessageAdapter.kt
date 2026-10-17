@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.Base64
 import android.view.Gravity
-import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +12,7 @@ import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -26,7 +26,6 @@ sealed class ChatItem {
 
 class MessageAdapter(
     private val isGroup: Boolean = false,
-    private val context: android.content.Context? = null,
     private val onDelete: ((Long) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -128,6 +127,10 @@ class MessageAdapter(
         val sender: TextView = v.findViewById(R.id.senderName)
 
         fun bind(msg: ChatMessage) {
+            val ctx = itemView.context
+            val theme = ThemeHelper.current(ctx)
+            val density = ctx.resources.displayMetrics.density
+
             text.text = msg.text
             time.text = fmt.format(Date(msg.timestamp))
 
@@ -154,8 +157,30 @@ class MessageAdapter(
 
             if (msg.text.isNullOrEmpty() && msg.imageData != null) {
                 text.visibility = View.GONE
+                bubble.background = null
+                bubble.setPadding(0, 0, 0, 0)
+                val params = image.layoutParams as LinearLayout.LayoutParams
+                params.width = (220 * density).toInt()
+                params.height = (220 * density).toInt()
+                image.layoutParams = params
             } else {
                 text.visibility = View.VISIBLE
+                val bg = GradientDrawable().apply {
+                    cornerRadii = floatArrayOf(
+                        16f * density, 16f * density,
+                        16f * density, 16f * density,
+                        if (msg.isMine) 4f * density else 16f * density,
+                        if (msg.isMine) 4f * density else 16f * density,
+                        if (msg.isMine) 16f * density else 4f * density,
+                        if (msg.isMine) 16f * density else 4f * density
+                    )
+                    setColor(if (msg.isMine) theme.bubbleMine else theme.bubbleOther)
+                }
+                bubble.background = bg
+                bubble.setPadding(
+                    (6 * density).toInt(), (6 * density).toInt(),
+                    (6 * density).toInt(), (4 * density).toInt()
+                )
             }
 
             val params = bubble.layoutParams as LinearLayout.LayoutParams
@@ -168,45 +193,34 @@ class MessageAdapter(
             }
             bubble.layoutParams = params
 
-            // Apply theme bubble colors
-            val ctx = itemView.context
-            val theme = ThemeHelper.current(ctx)
-            val bg = GradientDrawable().apply {
-                cornerRadii = floatArrayOf(
-                    16f * ctx.resources.displayMetrics.density, 16f * ctx.resources.displayMetrics.density,
-                    16f * ctx.resources.displayMetrics.density, 16f * ctx.resources.displayMetrics.density,
-                    if (msg.isMine) 4f * ctx.resources.displayMetrics.density else 16f * ctx.resources.displayMetrics.density,
-                    if (msg.isMine) 4f * ctx.resources.displayMetrics.density else 16f * ctx.resources.displayMetrics.density,
-                    if (msg.isMine) 16f * ctx.resources.displayMetrics.density else 4f * ctx.resources.displayMetrics.density,
-                    if (msg.isMine) 16f * ctx.resources.displayMetrics.density else 4f * ctx.resources.displayMetrics.density
-                )
-                setColor(if (msg.isMine) theme.bubbleMine else theme.bubbleOther)
-            }
-            bubble.background = bg
+            // ===== LOGIKA HAPUS PESAN =====
+            text.isLongClickable = false
+            time.isLongClickable = false
+            image.isLongClickable = false
 
-            // Tap gambar → buka fullscreen viewer
-            image.setOnClickListener {
-                if (msg.imageData != null) {
-                    val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
-                    intent.putExtra("imageData", msg.imageData)
-                    ctx.startActivity(intent)
-                }
-            }
-
-            // Long press gambar → simpan ke galeri (tetap ada sebagai shortcut)
-            image.setOnLongClickListener {
-                if (msg.imageData != null) {
+            bubble.isLongClickable = true
+            bubble.setOnLongClickListener {
+                if (onDelete != null) {
                     AlertDialog.Builder(ctx)
-                        .setTitle("Simpan Gambar?")
-                        .setMessage("Simpan gambar ini ke galeri HP?")
-                        .setPositiveButton("Simpan") { _, _ ->
-                            ImageSaver.saveBase64ToGallery(ctx, msg.imageData)
+                        .setTitle("Hapus Pesan?")
+                        .setMessage("Pesan ini bakal dihapus permanen.")
+                        .setPositiveButton("Hapus") { _, _ ->
+                            onDelete.invoke(msg.timestamp)
                         }
                         .setNegativeButton("Batal", null)
                         .show()
                     true
                 } else {
                     false
+                }
+            }
+
+            // Tap gambar → Fullscreen
+            image.setOnClickListener {
+                if (msg.imageData != null) {
+                    val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
+                    intent.putExtra("imageData", msg.imageData)
+                    ctx.startActivity(intent)
                 }
             }
 
