@@ -25,6 +25,8 @@ class PerangkatFragment : Fragment() {
     private lateinit var layoutWifi: LinearLayout
     private lateinit var layoutHotspot: LinearLayout
     private lateinit var btnHotspotConnect: Button
+    private lateinit var adapter: PeerAdapter
+    private lateinit var peerList: androidx.recyclerview.widget.RecyclerView
 
     private var isConnected = false
     private var isGroupOwner = false
@@ -51,8 +53,17 @@ class PerangkatFragment : Fragment() {
         layoutWifi = view.findViewById(R.id.layoutWifiDirect)
         layoutHotspot = view.findViewById(R.id.layoutHotspot)
         btnHotspotConnect = view.findViewById(R.id.btnHotspotConnect)
+        peerList = view.findViewById(R.id.peerList)
+        adapter = PeerAdapter { device ->
+            // Klik manual buat connect (paksa jadi Client)
+            wifiManager.connect(device)
+            statusText.text = "Menghubungkan ke ${device.deviceName}..."
+        }
+        peerList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+        peerList.adapter = adapter
 
         wifiManager = WifiDirectManager(requireContext()).apply {
+            onPeersChanged = { devices -> activity?.runOnUiThread { adapter.update(devices) } }
             onStatusChanged = { msg -> activity?.runOnUiThread { statusText.text = msg } }
             onConnectionInfo = { info -> activity?.runOnUiThread { handleConnectionInfo(info) } }
         }
