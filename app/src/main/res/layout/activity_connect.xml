@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/home_bg"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hubungkan ke:"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary" />
+
+    <TextView
+        android:id="@+id/tvDeviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Device Name"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:paddingBottom="40dp" />
+
+    <Button
+        android:id="@+id/btnConnectClient"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Sebagai Client (Disarankan)"
+        android:textSize="16sp"
+        android:backgroundTint="@color/brand_accent"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnConnectAuto"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Auto (Biarkan Android Memilih)"
+        android:textSize="16sp"
+        android:backgroundTint="#4A90E2"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="40dp" />
+
+    <Button
+        android:id="@+id/btnCancelConnect"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Batal"
+        android:backgroundTint="#424242"
+        android:textColor="#FFFFFF" />
+</LinearLayout>
