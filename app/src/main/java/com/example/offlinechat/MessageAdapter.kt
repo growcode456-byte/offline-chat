@@ -1,5 +1,8 @@
 package com.example.offlinechat
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -12,8 +15,9 @@ import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -193,24 +197,32 @@ class MessageAdapter(
             }
             bubble.layoutParams = params
 
-            // ===== LOGIKA HAPUS PESAN =====
-            // Taruh listener di itemView (seluruh baris chat)
+            // MENU TAP-LAMA ALA WHATSAPP
             itemView.isLongClickable = true
             itemView.setOnLongClickListener {
-                if (onDelete != null) {
-                    android.widget.Toast.makeText(ctx, "Hapus?", android.widget.Toast.LENGTH_SHORT).show()
-                    AlertDialog.Builder(ctx)
-                        .setTitle("Hapus Pesan?")
-                        .setMessage("Pesan ini bakal dihapus permanen.")
-                        .setPositiveButton("Hapus") { _, _ ->
-                            onDelete.invoke(msg.timestamp)
-                        }
-                        .setNegativeButton("Batal", null)
-                        .show()
-                    true
-                } else {
-                    false
+                val dialog = BottomSheetDialog(ctx)
+                val view = LayoutInflater.from(ctx).inflate(R.layout.layout_message_menu, null)
+                dialog.setContentView(view)
+
+                // Logic Salin
+                view.findViewById<View>(R.id.menuCopy).setOnClickListener {
+                    val clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("Pesan", msg.text)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(ctx, "Pesan disalin", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
                 }
+
+                // Logic Hapus
+                view.findViewById<View>(R.id.menuDelete).setOnClickListener {
+                    if (onDelete != null) {
+                        onDelete.invoke(msg.timestamp)
+                    }
+                    dialog.dismiss()
+                }
+
+                dialog.show()
+                true
             }
 
             // Tap gambar → Fullscreen
