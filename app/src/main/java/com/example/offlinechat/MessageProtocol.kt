@@ -18,6 +18,8 @@ data class ChatMessage(
         o.put("ts", timestamp)
         if (imageData != null) o.put("img", imageData)
         if (senderColor != null) o.put("color", senderColor)
+        if (audioPath != null) o.put("audio", audioPath)
+        if (audioDuration > 0) o.put("dur", audioDuration)
         if (voicePath != null) o.put("voice", voicePath)
         return o.toString()
     }
@@ -32,6 +34,8 @@ data class ChatMessage(
                     timestamp = o.getLong("ts"),
                     imageData = if (o.has("img")) o.getString("img") else null,
                     senderColor = if (o.has("color")) o.getInt("color") else null,
+                    audioPath = if (o.has("audio")) o.getString("audio") else null,
+                    audioDuration = if (o.has("dur")) o.getInt("dur") else 0,
                     voicePath = if (o.has("voice")) o.getString("voice") else null
                 )
             } catch (e: Exception) {

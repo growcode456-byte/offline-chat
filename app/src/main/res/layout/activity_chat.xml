@@ -62,6 +62,7 @@
         layout="@layout/emoji_picker"
         android:visibility="gone" />
 
+    <!-- INPUT BAR ALA WA -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -83,21 +84,11 @@
             android:paddingEnd="8dp">
 
             <ImageButton
-                android:id="@+id/btnMic"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_btn_speak_now"
-                android:tint="#8696A0"
-                android:scaleType="centerInside"
-                android:contentDescription="Rekam Suara" />
-
-            <ImageButton
                 android:id="@+id/btnEmoji"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_emoji"
+                android:src="@drawable/ic_emoji_outline"
                 android:tint="#8696A0"
                 android:scaleType="centerInside"
                 android:contentDescription="Emoji" />
@@ -147,10 +138,49 @@
             android:layout_height="48dp"
             android:layout_marginStart="6dp"
             android:background="@drawable/send_button_bg"
-            android:src="@android:drawable/ic_menu_send"
+            android:src="@android:drawable/ic_btn_speak_now"
             android:scaleType="centerInside"
             android:contentDescription="Kirim"
             android:tint="#FFFFFF" />
     </LinearLayout>
 
+    <!-- UI REKAMAN (MUNCUL PAS MIC DITEKAN) -->
+    <LinearLayout
+        android:id="@+id/recordingLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#202C33"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        android:elevation="10dp">
+
+        <TextView
+            android:id="@+id/tvRecordingTimer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔴 00:00"
+            android:textColor="#E53935"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnCancelRecord"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Batal"
+            android:backgroundTint="#424242"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnStopRecord"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Kirim"
+            android:backgroundTint="@color/brand_accent"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
 </LinearLayout>

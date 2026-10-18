@@ -6,6 +6,9 @@ import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.media.MediaRecorder
+import android.os.CountDownTimer
+import java.io.File
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
@@ -54,6 +57,10 @@ class ChatActivity : BaseActivity() {
     private lateinit var emojiPanel: View
 
     private val handler = Handler(Looper.getMainLooper())
+    private var mediaRecorder: MediaRecorder? = null
+    private var audioFile: File? = null
+    private var isRecording = false
+    private var recordTimer: CountDownTimer? = null
 
     private val groupBots = listOf(
         Bot("Budi", Color.parseColor("#E57373"),
@@ -170,14 +177,53 @@ class ChatActivity : BaseActivity() {
         })
         updateSendButton(false)
 
+        // Handle tombol send / mic
+        val recordingLayout = findViewById<LinearLayout>(R.id.recordingLayout)
+        val tvRecordingTimer = findViewById<TextView>(R.id.tvRecordingTimer)
+        val btnStopRecord = findViewById<Button>(R.id.btnStopRecord)
+        val btnCancelRecord = findViewById<Button>(R.id.btnCancelRecord)
+
         btnSend.setOnClickListener {
             val text = input.text.toString().trim()
             if (text.isEmpty()) {
-                Toast.makeText(this, "🎤 Voice note belum tersedia", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                // MULAI REKAM
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.RECORD_AUDIO), 100)
+                    return@setOnClickListener
+                }
+                startRecording()
+                recordingLayout.visibility = View.VISIBLE
+                btnSend.setImageResource(android.R.drawable.ic_menu_save) // Ganti icon
+                
+                recordTimer = object : CountDownTimer(60000, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val sec = (60000 - millisUntilFinished) / 1000
+                        tvRecordingTimer.text = String.format("🔴 00:%02d", sec)
+                    }
+                    override fun onFinish() {
+                        stopRecording()
+                        recordingLayout.visibility = View.GONE
+                        btnSend.setImageResource(android.R.drawable.ic_btn_speak_now)
+                    }
+                }.start()
+            } else {
+                sendMessage(text)
+                input.setText("")
             }
-            sendMessage(text)
-            input.setText("")
+        }
+
+        btnStopRecord.setOnClickListener {
+            stopRecording()
+            recordingLayout.visibility = View.GONE
+            btnSend.setImageResource(android.R.drawable.ic_btn_speak_now)
+            recordTimer?.cancel()
+        }
+
+        btnCancelRecord.setOnClickListener {
+            cancelRecording()
+            recordingLayout.visibility = View.GONE
+            btnSend.setImageResource(android.R.drawable.ic_btn_speak_now)
+            recordTimer?.cancel()
         }
 
         btnEmoji.setOnClickListener { toggleEmojiPanel() }
@@ -214,6 +260,59 @@ class ChatActivity : BaseActivity() {
                 )
             }
         }
+    }
+
+    private fun startRecording() {
+        try {
+            audioFile = File(cacheDir, "voice_${System.currentTimeMillis()}.m4a")
+            mediaRecorder = MediaRecorder().apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(audioFile?.absolutePath)
+                prepare()
+                start()
+            }
+            isRecording = true
+            Toast.makeText(this, "Merekam...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gagal rekam: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun stopRecording() {
+        if (!isRecording) return
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+            isRecording = false
+            
+            audioFile?.let {
+                val msg = ChatMessage(
+                    from = myName,
+                    text = "",
+                    timestamp = System.currentTimeMillis(),
+                    isMine = true,
+                    audioPath = it.absolutePath,
+                    audioDuration = 5 // Placeholder durasi
+                )
+                addAndSave(msg)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gagal simpan", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun cancelRecording() {
+        if (!isRecording) return
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+            isRecording = false
+            audioFile?.delete()
+        } catch (e: Exception) {}
     }
 
     private fun applyWallpaper() {
