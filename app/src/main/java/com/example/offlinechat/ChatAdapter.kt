@@ -39,7 +39,7 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
         holder.preview.text = item.lastMessage
         holder.time.text = formatTime(item.lastTimestamp)
 
-        // Avatar: Coba ambil dari foto profil, kalau gak ada pake huruf depan
+        // Avatar: Coba ambil dari foto profil, kalau gak ada pake warna solid
         val avatarBase64 = PrefsHelper.getAvatar(holder.itemView.context)
         if (avatarBase64 != null) {
             try {
@@ -47,23 +47,23 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
                 val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 holder.avatar.setImageBitmap(bmp)
             } catch (e: Exception) {
-                setDefaultAvatar(holder, item)
+                holder.avatar.setImageDrawable(null)
+                val bg = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    setColor(item.colorAccent)
+                }
+                holder.avatar.background = bg
             }
         } else {
-            setDefaultAvatar(holder, item)
+            holder.avatar.setImageDrawable(null)
+            val bg = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(item.colorAccent)
+            }
+            holder.avatar.background = bg
         }
 
         holder.itemView.setOnClickListener { onTap(item) }
-    }
-
-    private fun setDefaultAvatar(holder: VH, item: ChatPreview) {
-        // Karena ImageView gak bisa nampilin teks, kita set background warna aja kalau gak ada foto
-        val bg = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor(item.colorAccent)
-        }
-        holder.avatar.setImageDrawable(null)
-        holder.avatar.background = bg
     }
 
     private fun formatTime(ts: Long): String {
