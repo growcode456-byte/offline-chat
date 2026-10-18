@@ -18,11 +18,14 @@ class ChatServer(
     @Volatile private var running = false
 
     fun start() {
+        if (running) return
         running = true
         Thread {
             try {
                 onStatus("Server start di port $port")
-                serverSocket = ServerSocket(port)
+                serverSocket = ServerSocket()
+                serverSocket?.reuseAddress = true
+                serverSocket?.bind(java.net.InetSocketAddress(port))
                 onStatus("Menunggu client...")
                 clientSocket = serverSocket?.accept()
                 onStatus("Client tersambung!")
