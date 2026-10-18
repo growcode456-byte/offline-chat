@@ -129,7 +129,7 @@ class MessageAdapter(
         val time: TextView = v.findViewById(R.id.messageTime)
         val image: ImageView = v.findViewById(R.id.messageImage)
         val sender: TextView = v.findViewById(R.id.senderName)
-        val voiceContainer: LinearLayout? = v.findViewById(R.id.voiceContainer)
+        val audioContainer: LinearLayout = v.findViewById(R.id.audioContainer)
 
         fun bind(msg: ChatMessage) {
             val ctx = itemView.context
@@ -147,82 +147,54 @@ class MessageAdapter(
                 sender.visibility = View.GONE
             }
 
-            // --- LOGIKA VOICE NOTE ---
-            if (msg.voicePath != null) {
+            // Handle Audio
+            if (msg.audioPath != null) {
+                audioContainer.visibility = View.VISIBLE
                 text.visibility = View.GONE
                 image.visibility = View.GONE
-                voiceContainer?.visibility = View.VISIBLE
                 
-                if (voiceContainer != null) {
-                    voiceContainer.removeAllViews()
-                    val playerView = LayoutInflater.from(ctx).inflate(R.layout.layout_voice_player, voiceContainer, false)
-                    voiceContainer.addView(playerView)
-
-                    val btnPlay = playerView.findViewById<android.widget.ImageView>(R.id.btnPlayVoice)
-                    val seekBar = playerView.findViewById<android.widget.SeekBar>(R.id.voiceSeekBar)
-                    val durationText = playerView.findViewById<android.widget.TextView>(R.id.voiceDuration)
-
-                    val mediaPlayer = android.media.MediaPlayer()
+                val tvDur = audioContainer.findViewById<TextView>(R.id.tvAudioDuration)
+                tvDur.text = String.format("%d:%02d", msg.audioDuration / 60, msg.audioDuration % 60)
+                
+                val btnPlay = audioContainer.findViewById<ImageView>(R.id.btnPlayAudio)
+                btnPlay.setOnClickListener {
                     try {
-                        mediaPlayer.setDataSource(msg.voicePath)
-                        mediaPlayer.prepare()
-                        
-                        val duration = mediaPlayer.duration
-                        seekBar.max = duration
-                        durationText.text = String.format("%02d:%02d", (duration / 1000) / 60, (duration / 1000) % 60)
-
-                        btnPlay.setOnClickListener {
-                            if (mediaPlayer.isPlaying) {
-                                mediaPlayer.pause()
-                                btnPlay.setImageResource(android.R.drawable.ic_media_play)
-                            } else {
-                                mediaPlayer.start()
-                                btnPlay.setImageResource(android.R.drawable.ic_media_pause)
-                                
-                                val handler = android.os.Handler(android.os.Looper.getMainLooper())
-                                handler.postDelayed(object : Runnable {
-                                    override fun run() {
-                                        if (mediaPlayer.isPlaying) {
-                                            seekBar.progress = mediaPlayer.currentPosition
-                                            handler.postDelayed(this, 500)
-                                        } else {
-                                            btnPlay.setImageResource(android.R.drawable.ic_media_play)
-                                            seekBar.progress = 0
-                                        }
-                                    }
-                                }, 0)
-                            }
+                        val player = android.media.MediaPlayer()
+                        player.setDataSource(msg.audioPath)
+                        player.prepare()
+                        player.start()
+                        btnPlay.setImageResource(android.R.drawable.ic_media_pause)
+                        player.setOnCompletionListener {
+                            btnPlay.setImageResource(android.R.drawable.ic_media_play)
+                            player.release()
                         }
                     } catch (e: Exception) {
-                        durationText.text = "Error audio"
+                        Toast.makeText(ctx, "Gagal putar audio", Toast.LENGTH_SHORT).show()
                     }
                 }
-            } else if (msg.imageData != null) {
-                voiceContainer?.visibility = View.GONE
+            } else {
+                audioContainer.visibility = View.GONE
+            }
+
+            // Handle Image
+            if (msg.imageData != null && msg.audioPath == null) {
                 try {
                     val bytes = Base64.decode(msg.imageData, Base64.DEFAULT)
                     val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     image.setImageBitmap(bmp)
                     image.visibility = View.VISIBLE
+                    text.visibility = View.GONE
                 } catch (e: Exception) {
                     image.visibility = View.GONE
                 }
-            } else {
+            } else if (msg.audioPath == null) {
                 image.visibility = View.GONE
-                voiceContainer?.visibility = View.GONE
             }
 
-            if (msg.text.isNullOrEmpty() && msg.imageData != null) {
-                text.visibility = View.GONE
-                bubble.background = null
-                bubble.setPadding(0, 0, 0, 0)
-                val params = image.layoutParams as LinearLayout.LayoutParams
-                params.width = (220 * density).toInt()
-                params.height = (220 * density).toInt()
-                image.layoutParams = params
-            } else {
+            // Handle Text
+            if (msg.audioPath == null && msg.imageData == null) {
                 text.visibility = View.VISIBLE
-                val bg = GradientDrawable().apply {
+                bubble.background = GradientDrawable().apply {
                     cornerRadii = floatArrayOf(
                         16f * density, 16f * density,
                         16f * density, 16f * density,
@@ -233,11 +205,8 @@ class MessageAdapter(
                     )
                     setColor(if (msg.isMine) theme.bubbleMine else theme.bubbleOther)
                 }
-                bubble.background = bg
-                bubble.setPadding(
-                    (6 * density).toInt(), (6 * density).toInt(),
-                    (6 * density).toInt(), (4 * density).toInt()
-                )
+            } else {
+                bubble.background = null
             }
 
             val params = bubble.layoutParams as LinearLayout.LayoutParams
@@ -250,18 +219,9 @@ class MessageAdapter(
             }
             bubble.layoutParams = params
 
-            // --- FIX KLIK: Matikan klik di teks & gambar, pindah ke bubble ---
-            text.isClickable = false
-            text.isLongClickable = false
-            time.isClickable = false
-            time.isLongClickable = false
-            image.isClickable = false
-            image.isLongClickable = false
-
-            bubble.isClickable = true
-            bubble.isLongClickable = true
-            
-            bubble.setOnLongClickListener {
+            // Menu Tap Lama
+            itemView.isLongClickable = true
+            itemView.setOnLongClickListener {
                 val dialog = BottomSheetDialog(ctx)
                 val view = LayoutInflater.from(ctx).inflate(R.layout.layout_message_menu, null)
                 dialog.setContentView(view)
@@ -285,16 +245,13 @@ class MessageAdapter(
                 true
             }
 
-            // Tap gambar → Fullscreen (karena isClickable=false, kita set OnTouchListener biar tetep bisa di-tap)
-            image.setOnTouchListener { _, event ->
-                if (event.action == android.view.MotionEvent.ACTION_UP) {
-                    if (msg.imageData != null) {
-                        val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
-                        intent.putExtra("imageData", msg.imageData)
-                        ctx.startActivity(intent)
-                    }
+            // Tap Gambar Fullscreen
+            image.setOnClickListener {
+                if (msg.imageData != null) {
+                    val intent = android.content.Intent(ctx, ImageViewerActivity::class.java)
+                    intent.putExtra("imageData", msg.imageData)
+                    ctx.startActivity(intent)
                 }
-                false // return false biar bubble tetep bisa long-press
             }
 
             val anim = AnimationUtils.loadAnimation(ctx, android.R.anim.fade_in)
