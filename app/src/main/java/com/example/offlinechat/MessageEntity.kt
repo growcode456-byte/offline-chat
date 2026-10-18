@@ -13,9 +13,19 @@ data class MessageEntity(
     val chatId: String,
     val imageData: String? = null,
     val senderColor: Int? = null,
-    val voicePath: String? = null
+    val audioPath: String? = null,
+    val audioDuration: Int = 0
 ) {
-    fun toChatMessage(): ChatMessage = ChatMessage(from, text, timestamp, isMine, imageData, senderColor, voicePath)
+    fun toChatMessage(): ChatMessage = ChatMessage(
+        from = from,
+        text = text,
+        timestamp = timestamp,
+        isMine = isMine,
+        imageData = imageData,
+        senderColor = senderColor,
+        audioPath = audioPath,
+        audioDuration = audioDuration
+    )
 }
 
 fun ChatMessage.toEntity(chatId: String): MessageEntity = MessageEntity(
@@ -26,5 +36,6 @@ fun ChatMessage.toEntity(chatId: String): MessageEntity = MessageEntity(
     chatId = chatId,
     imageData = imageData,
     senderColor = senderColor,
-    voicePath = voicePath
+    audioPath = audioPath,
+    audioDuration = audioDuration
 )
