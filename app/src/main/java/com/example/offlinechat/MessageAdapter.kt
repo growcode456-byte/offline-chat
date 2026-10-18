@@ -129,6 +129,7 @@ class MessageAdapter(
         val time: TextView = v.findViewById(R.id.messageTime)
         val image: ImageView = v.findViewById(R.id.messageImage)
         val sender: TextView = v.findViewById(R.id.senderName)
+        val voiceContainer: LinearLayout? = v.findViewById(R.id.voiceContainer)
 
         fun bind(msg: ChatMessage) {
             val ctx = itemView.context
@@ -146,7 +147,58 @@ class MessageAdapter(
                 sender.visibility = View.GONE
             }
 
-            if (msg.imageData != null) {
+            // --- LOGIKA VOICE NOTE ---
+            if (msg.voicePath != null) {
+                text.visibility = View.GONE
+                image.visibility = View.GONE
+                voiceContainer?.visibility = View.VISIBLE
+                
+                if (voiceContainer != null) {
+                    voiceContainer.removeAllViews()
+                    val playerView = LayoutInflater.from(ctx).inflate(R.layout.layout_voice_player, voiceContainer, false)
+                    voiceContainer.addView(playerView)
+
+                    val btnPlay = playerView.findViewById<android.widget.ImageView>(R.id.btnPlayVoice)
+                    val seekBar = playerView.findViewById<android.widget.SeekBar>(R.id.voiceSeekBar)
+                    val durationText = playerView.findViewById<android.widget.TextView>(R.id.voiceDuration)
+
+                    val mediaPlayer = android.media.MediaPlayer()
+                    try {
+                        mediaPlayer.setDataSource(msg.voicePath)
+                        mediaPlayer.prepare()
+                        
+                        val duration = mediaPlayer.duration
+                        seekBar.max = duration
+                        durationText.text = String.format("%02d:%02d", (duration / 1000) / 60, (duration / 1000) % 60)
+
+                        btnPlay.setOnClickListener {
+                            if (mediaPlayer.isPlaying) {
+                                mediaPlayer.pause()
+                                btnPlay.setImageResource(android.R.drawable.ic_media_play)
+                            } else {
+                                mediaPlayer.start()
+                                btnPlay.setImageResource(android.R.drawable.ic_media_pause)
+                                
+                                val handler = android.os.Handler(android.os.Looper.getMainLooper())
+                                handler.postDelayed(object : Runnable {
+                                    override fun run() {
+                                        if (mediaPlayer.isPlaying) {
+                                            seekBar.progress = mediaPlayer.currentPosition
+                                            handler.postDelayed(this, 500)
+                                        } else {
+                                            btnPlay.setImageResource(android.R.drawable.ic_media_play)
+                                            seekBar.progress = 0
+                                        }
+                                    }
+                                }, 0)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        durationText.text = "Error audio"
+                    }
+                }
+            } else if (msg.imageData != null) {
+                voiceContainer?.visibility = View.GONE
                 try {
                     val bytes = Base64.decode(msg.imageData, Base64.DEFAULT)
                     val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
@@ -157,6 +209,7 @@ class MessageAdapter(
                 }
             } else {
                 image.visibility = View.GONE
+                voiceContainer?.visibility = View.GONE
             }
 
             if (msg.text.isNullOrEmpty() && msg.imageData != null) {

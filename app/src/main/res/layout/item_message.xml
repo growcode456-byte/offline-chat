@@ -45,6 +45,13 @@
             app:shapeAppearanceOverlay="@style/RoundedImage" />
 
         <!-- Paksa warna teks jadi gelap biar kebaca di bubble terang -->
+        <LinearLayout
+            android:id="@+id/voiceContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/messageText"
             android:layout_width="wrap_content"
