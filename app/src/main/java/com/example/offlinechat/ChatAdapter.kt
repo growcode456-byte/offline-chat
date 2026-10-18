@@ -46,13 +46,6 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
                 val bytes = Base64.decode(avatarBase64, Base64.DEFAULT)
                 val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 holder.avatar.setImageBitmap(bmp)
-                // Bikin background kotak ijo jadi transparan/rounded
-                val bg = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 50f
-                    setColor(0x00000000)
-                }
-                holder.avatar.background = bg
             } catch (e: Exception) {
                 setDefaultAvatar(holder, item)
             }
@@ -64,9 +57,13 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
     }
 
     private fun setDefaultAvatar(holder: VH, item: ChatPreview) {
+        // Karena ImageView gak bisa nampilin teks, kita set background warna aja kalau gak ada foto
+        val bg = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(item.colorAccent)
+        }
         holder.avatar.setImageDrawable(null)
-        holder.avatar.text = item.title.take(1).uppercase()
-        holder.avatar.background.setTint(item.colorAccent)
+        holder.avatar.background = bg
     }
 
     private fun formatTime(ts: Long): String {
@@ -83,6 +80,6 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
         val title: TextView = v.findViewById(R.id.chatTitle)
         val preview: TextView = v.findViewById(R.id.chatPreview)
         val time: TextView = v.findViewById(R.id.chatTime)
-        val avatar: TextView = v.findViewById(R.id.chatAvatar) // Di XML ini TextView, kita handle di kode
+        val avatar: ImageView = v.findViewById(R.id.chatAvatar)
     }
 }

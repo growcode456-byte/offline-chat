@@ -9,15 +9,12 @@
     android:focusable="true"
     android:gravity="center_vertical">
 
-    <TextView
+    <!-- Pakai ImageView biar bisa nampilin foto -->
+    <ImageView
         android:id="@+id/chatAvatar"
         android:layout_width="52dp"
         android:layout_height="52dp"
-        android:gravity="center"
-        android:text="R"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:scaleType="centerCrop"
         android:background="#128C7E" />
 
     <LinearLayout
