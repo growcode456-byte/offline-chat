@@ -16,6 +16,7 @@
         android:elevation="4dp">
 
         <ImageView
+            android:id="@+id/chatHeaderAvatar"
             android:layout_width="38dp"
             android:layout_height="38dp"
             android:src="@drawable/splash_logo"
