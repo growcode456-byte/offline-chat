@@ -149,8 +149,8 @@ class ChatActivity : BaseActivity() {
 
         val recordingLayout = findViewById<LinearLayout>(R.id.recordingLayout)
         val tvRecordingTimer = findViewById<TextView>(R.id.tvRecordingTimer)
-        val btnStopRecord = findViewById<Button>(R.id.btnStopRecord)
-        val btnCancelRecord = findViewById<Button>(R.id.btnCancelRecord)
+        val btnStopRecord = findViewById<ImageButton>(R.id.btnStopRecord)
+        val btnCancelRecord = findViewById<ImageButton>(R.id.btnCancelRecord)
 
         input.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -170,10 +170,11 @@ class ChatActivity : BaseActivity() {
                 startRecording()
                 recordingLayout.visibility = View.VISIBLE
                 btnSend.setImageResource(android.R.drawable.ic_menu_save)
+                btnStopRecord.setImageResource(android.R.drawable.ic_media_pause)
                 recordTimer = object : CountDownTimer(60000, 1000) {
                     override fun onTick(millisUntilFinished: Long) {
                         val sec = (60000 - millisUntilFinished) / 1000
-                        tvRecordingTimer.text = String.format("🔴 00:%02d", sec)
+                        tvRecordingTimer.text = String.format("%d:%02d", sec / 60, sec % 60)
                     }
                     override fun onFinish() {
                         stopRecording()
@@ -191,6 +192,7 @@ class ChatActivity : BaseActivity() {
             stopRecording()
             recordingLayout.visibility = View.GONE
             btnSend.setImageResource(android.R.drawable.ic_btn_speak_now)
+            btnStopRecord.setImageResource(android.R.drawable.ic_media_play)
             recordTimer?.cancel()
         }
         btnCancelRecord.setOnClickListener {

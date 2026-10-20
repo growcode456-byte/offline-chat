@@ -144,43 +144,68 @@
             android:tint="#FFFFFF" />
     </LinearLayout>
 
-    <!-- UI REKAMAN (MUNCUL PAS MIC DITEKAN) -->
+    <!-- UI REKAMAN ALA WHATSAPP -->
     <LinearLayout
         android:id="@+id/recordingLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#202C33"
+        android:background="#CC202C33"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="12dp"
         android:gravity="center_vertical"
         android:visibility="gone"
         android:elevation="10dp">
 
-        <TextView
-            android:id="@+id/tvRecordingTimer"
+        <!-- Hapus (Kiri) -->
+        <ImageButton
+            android:id="@+id/btnCancelRecord"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="#E53935" />
+
+        <!-- Timer & Waveform (Tengah) -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🔴 00:00"
-            android:textColor="#E53935"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="#33FFFFFF"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:layout_marginHorizontal="8dp">
 
-        <Button
-            android:id="@+id/btnCancelRecord"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="Batal"
-            android:backgroundTint="#424242"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp" />
+            <TextView
+                android:id="@+id/tvRecordingTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:fontFamily="monospace"
+                android:layout_marginEnd="12dp" />
 
-        <Button
+            <!-- Garis-garis waveform statis (simulasi) -->
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="24dp"
+                android:layout_weight="1"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:tint="#8696A0"
+                android:scaleType="fitXY" />
+
+        </LinearLayout>
+
+        <!-- Tombol Stop/Kirim (Kanan) -->
+        <ImageButton
             android:id="@+id/btnStopRecord"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="Kirim"
-            android:backgroundTint="@color/brand_accent"
-            android:textColor="#FFFFFF" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/send_button_bg"
+            android:src="@android:drawable/ic_media_play"
+            android:tint="#FFFFFF"
+            android:scaleType="centerInside" />
     </LinearLayout>
 </LinearLayout>
