@@ -39,31 +39,32 @@ class ChatAdapter(private val onTap: (ChatPreview) -> Unit)
         holder.preview.text = item.lastMessage
         holder.time.text = formatTime(item.lastTimestamp)
 
-        // Avatar: Coba ambil dari foto profil, kalau gak ada pake warna solid
+        // Ambil foto profil dari Prefs
         val avatarBase64 = PrefsHelper.getAvatar(holder.itemView.context)
         if (avatarBase64 != null) {
             try {
                 val bytes = Base64.decode(avatarBase64, Base64.DEFAULT)
                 val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 holder.avatar.setImageBitmap(bmp)
+                // Hapus background warna kalau pakai foto
+                holder.avatar.background = null
             } catch (e: Exception) {
-                holder.avatar.setImageDrawable(null)
-                val bg = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    setColor(item.colorAccent)
-                }
-                holder.avatar.background = bg
+                setDefaultAvatar(holder, item)
             }
         } else {
-            holder.avatar.setImageDrawable(null)
-            val bg = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(item.colorAccent)
-            }
-            holder.avatar.background = bg
+            setDefaultAvatar(holder, item)
         }
 
         holder.itemView.setOnClickListener { onTap(item) }
+    }
+
+    private fun setDefaultAvatar(holder: VH, item: ChatPreview) {
+        holder.avatar.setImageDrawable(null)
+        val bg = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(item.colorAccent)
+        }
+        holder.avatar.background = bg
     }
 
     private fun formatTime(ts: Long): String {
